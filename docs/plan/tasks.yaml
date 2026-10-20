@@ -144,3 +144,194 @@ tasks:
     depends_on: [T1.2]
     acceptance: 写出存档内容、存储位置和读写时机的设计文档
     updated: 2026-10-20
+
+  # ---------- v0.8.1 起：试玩评价后的分阶段优化（详表见 00_项目管理\优化路线图_v0.8.1起.md） ----------
+  - id: T7.1
+    goal: G7
+    title: 攻击不随镜头远近变化（瞄准射线跳过镜头与角色之间的物体、伙伴不挡枪、命中容差、法弹追踪）
+    status: in_progress
+    owner: claude
+    branch: feature/v0.8.1-combat
+    depends_on: []
+    acceptance: 镜头最近与最远时，对同一目标的命中结果一致
+    updated: 2026-10-20
+
+  - id: T7.2
+    goal: G7
+    title: 战斗反馈（伤害飘字、命中弹动、守卫血条、可结契提示）
+    status: in_progress
+    owner: claude
+    branch: feature/v0.8.1-combat
+    depends_on: []
+    acceptance: 截图能看清是否命中、伤害数值、剩余生命、是否可结契
+    updated: 2026-10-20
+
+  - id: T7.3
+    goal: G7
+    title: 树石碰撞统一（树干实际位置、石头凸包碰撞、高植物加碰撞）
+    status: in_progress
+    owner: claude
+    branch: feature/v0.8.1-combat
+    depends_on: []
+    acceptance: 贴着树干、石头走不穿模、不撞空气墙
+    updated: 2026-10-20
+
+  - id: T7.4
+    goal: G7
+    title: 版本标识统一（窗口标题、BUILD_INFO、标题页）
+    status: in_progress
+    owner: claude
+    branch: feature/v0.8.1-combat
+    depends_on: []
+    acceptance: 窗口标题显示当前版本，不再是 v0.6.6
+    updated: 2026-10-20
+
+  - id: T7.5
+    goal: G8
+    title: 新手引导分步提示
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 新玩家不看说明页也能完成第一次结契
+    updated: 2026-10-20
+
+  - id: T7.6
+    goal: G8
+    title: HUD 清晰（文字溢出、字号、当前目标面板）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 1080p 截图所有 HUD 文字完整可读
+    updated: 2026-10-20
+
+  - id: T7.7
+    goal: G8
+    title: 画面亮度与层次
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 前中远景层次可分，草地不刺眼
+    updated: 2026-10-20
+
+  - id: T7.8
+    goal: G9
+    title: 主角走路 / 奔跑姿态（Blender 或 Mixamo 动作）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 走、跑、冲刺脚步不打滑、姿态自然
+    updated: 2026-10-20
+
+  - id: T7.9
+    goal: G9
+    title: 鸟类专用模型与起飞、滑翔、扑翼、落地动作
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 飞、停、起落过渡自然
+    updated: 2026-10-20
+
+  - id: T7.10
+    goal: G9
+    title: 月羽灵蝶换成蝴蝶模型并做扑翼动作
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 名字与模型一致
+    updated: 2026-10-20
+
+  - id: T7.11
+    goal: G9
+    title: 岩甲灵龟升级（AI 生成 + Blender 减面绑骨）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 爬行四肢交替自然
+    updated: 2026-10-20
+
+  - id: T7.12
+    goal: G9
+    title: 猫系三种灵兽外形区分
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 三种外形一眼可分
+    updated: 2026-10-20
+
+  - id: T7.13
+    goal: G9
+    title: 灵兽攻击动作（冲撞、俯冲、伸颈咬）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 攻击动作与伤害时机对齐
+    updated: 2026-10-20
+
+  - id: T7.14
+    goal: G10
+    title: 营地与地标山海化
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 营地截图有明显主题特征
+    updated: 2026-10-20
+
+  - id: T7.15
+    goal: G10
+    title: 三个世界地貌差异（含外围区块）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 三个世界截图一眼可分
+    updated: 2026-10-20
+
+  - id: T7.16
+    goal: G11
+    title: 灵兽习性落到行为（逃跑、主动攻击、昼夜、地形偏好）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 观察行为能决定接近方式
+    updated: 2026-10-20
+
+  - id: T7.17
+    goal: G12
+    title: 伙伴能力（参战、采集、开路、解谜）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 至少 3 种伙伴能力影响探索
+    updated: 2026-10-20
+
+  - id: T7.18
+    goal: G12
+    title: 伙伴成长与区域解锁
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 持续 1 小时以上的目标链
+    updated: 2026-10-20
+
+  - id: T7.19
+    goal: G12
+    title: 存档（位置、资源、队伍、图鉴）
+    status: pending
+    owner: claude
+    branch: ""
+    depends_on: []
+    acceptance: 关游戏再开进度还在
+    updated: 2026-10-20
