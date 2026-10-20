@@ -46,13 +46,14 @@ public static class M1TerrainNoise
     public static Color GroundColor(int kind, float x, float z, float y)
     {
         float n = Mathf.PerlinNoise((x + 53f) * .05f, (z + 77f) * .05f);
-        Color low = kind == 2 ? new Color(.66f, .52f, .40f) : kind == 1 ? new Color(.36f, .58f, .34f) : new Color(.48f, .66f, .36f);
-        Color high = kind == 2 ? new Color(.74f, .58f, .46f) : new Color(.56f, .70f, .42f);
-        Color top = kind == 2 ? new Color(.64f, .6f, .56f) : new Color(.58f, .6f, .54f);
+        // v0.8.2：草地压暗、降饱和（评价：草地和道路偏亮、刺眼）
+        Color low = kind == 2 ? new Color(.60f, .47f, .37f) : kind == 1 ? new Color(.30f, .49f, .30f) : new Color(.41f, .57f, .32f);
+        Color high = kind == 2 ? new Color(.67f, .52f, .42f) : new Color(.48f, .61f, .38f);
+        Color top = kind == 2 ? new Color(.58f, .54f, .50f) : new Color(.50f, .53f, .48f);
         var c = Color.Lerp(low, high, n * .6f); c = Color.Lerp(c, top, Smooth(4f, 16f, y) * .85f);
         float patch = Mathf.PerlinNoise((x + 211f) * .011f, (z - 97f) * .011f), fine = Mathf.PerlinNoise(x * .21f, z * .21f);
         c = Color.Lerp(c, c * new Color(1.08f, 1.12f, .92f), Smooth(.42f, .72f, patch) * .6f); c *= .9f + .18f * fine;
-        float f = Flat(kind, x, z); if (f > .5f && (Mathf.Abs(x - PathCenter(kind, z)) < 9f || Mathf.Abs(z - CrossZ(kind, x)) < 8f)) c = Color.Lerp(c, kind == 2 ? new Color(.7f, .58f, .48f) : new Color(.62f, .6f, .44f), .35f);
+        float f = Flat(kind, x, z); if (f > .5f && (Mathf.Abs(x - PathCenter(kind, z)) < 9f || Mathf.Abs(z - CrossZ(kind, x)) < 8f)) c = Color.Lerp(c, kind == 2 ? new Color(.62f, .51f, .42f) : new Color(.55f, .52f, .39f), .35f);
         return c;
     }
 }

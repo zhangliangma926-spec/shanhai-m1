@@ -73,19 +73,36 @@ public class M1GameManager : MonoBehaviour
         "山海驭灵录 · 星金营地试玩说明\n\n"+
         "【世界介绍】你是山海旅者，持灵杖探索营地、青岚灵林和玄岩谷。野生异兽各有生命、习性和灵息；削弱后用灵契符收服，再放出并肩战斗。\n\n"+
         "【移动与视角】WASD 移动，空格跳跃，按住 Shift 加速（任意方向）；Left Alt+方向键闪避。移动鼠标控制准星；按住鼠标右键拖动旋转镜头，准星推到屏幕边缘时镜头也会缓慢跟转；滚轮缩放。蓄力时角色自动面向准星。\n\n"+
-        "【灵杖攻击】将准星对准守卫或异兽，按住鼠标左键或 J 蓄力，松开攻击；A 版射线固定从屏幕中心穿过，B 版射线从鼠标准星位置穿过；两版都不会自动吸附最近目标。没有瞄中角色时不造成伤害。R 切换武器。星金杖上限 12，青玉杖上限 8，赤焰杖上限 10，赤霄杖上限 32。野生异兽受击会至少保留 1 点生命，避免误杀。\n\n"+
+        "【灵杖攻击】将准星对准守卫或异兽，按住鼠标左键或 J 蓄力，松开攻击；A 版射线固定从屏幕中心穿过，B 版射线从鼠标准星位置穿过；准星附近一小圈内的目标也能命中（镜头远近一致），角色与目标之间有树石阻挡时打不穿。头顶飘出的数字是造成的伤害。R 切换武器。星金杖上限 12，青玉杖上限 8，赤焰杖上限 10，赤霄杖上限 32。野生异兽受击会至少保留 1 点生命，避免误杀。\n\n"+
         "【结契流程】攻击野生异兽至生命 ≤10%；靠近灵木/青玉矿按住 F 读条约 1 秒采集；按 B 制作灵契符；靠近目标约 3.25 米内按 E 结契（消耗 1 张）。按 P 查看队伍并放出/收回异兽，1/2/3 使用宠物技能。\n\n"+
         "【资源说明】灵木用于灵木斧和灵契符；青玉矿用于青玉镐和灵契符。斧增加采木量，镐增加采矿量。资源点的标牌也会显示用途。采空后约 2 分钟重新生长。\n\n"+
         "【刷新圈】角色脚下的淡青色圆圈是 100 米刷新圈：在圈内活动时，会概率刷出野生灵兽，刷出的灵兽离开圈外一定距离后会消失。按 H 可隐藏圆圈。\n\n"+
+        "【新手引导】右上角“当前目标”面板会一步步提示：移动、攻击、削弱、采集、制符、结契、召唤伙伴。F2 跳过或重新开始引导，F3 隐藏面板。\n\n"+
         "【灵兽图鉴】按 F1 打开可滚动图鉴，可查看名称、生命上限、简介与结契方法。野外名牌显示异兽名称和生命；结契伙伴放出后也显示名称。\n\n"+
         "【灵兽名录】岚角灵兽、赤尾灵狐、幽蓝翼兽、岩甲灵龟、青羽灵雀、赤焰山猫、雾角灵鹿、玄岩獠猪、琉璃水貂、月羽灵蝶、六目灵狐、七面幻狐、赤霄朱雀、青蛟、苍羽仙鹤、琥珀雷豹、霜牙灵狼、玉角灵牛、焰驼、白玉灵犬。\n\n"+
         "【安全与退出】Esc 暂停、继续、重新开始、查看本说明、回到标题或退出。生命归零后会在当前世界的中央灵泉复活。\n\n"+
         "【声音】本试用版含原创程序合成的森林氛围、法杖动作音与各异兽音色。可在正式试听后再调整混音与叫声。";
 
-    public const string Version="v0.8.1";
+    public const string Version="v0.8.2";
     // 说明文字里的【小标题】自动染成金色加粗
     static readonly string ManualRich=ManualText.Replace("【","<color=#E0BA66><b>【").Replace("】","】</b></color>");
 
+    // v0.8.2 开场页只放简短介绍，详细操作在游戏里由新手引导逐步提示；完整说明在 Esc 菜单 → 操作说明
+    const string QuickStart=
+        "<size=19><color=#E0BA66><b>你是山海旅者</b></color></size>\n持灵杖探索营地、青岚灵林和玄岩谷，收服山海灵兽，与它们并肩冒险。\n\n"+
+        "<size=19><color=#E0BA66><b>三步上手</b></color></size>\n"+
+        "<color=#5CDBCC><b>一  削弱</b></color>　准星对准野生灵兽，按住左键蓄力、松开发射，把它的生命打到 10% 以下。\n"+
+        "<color=#5CDBCC><b>二  制符</b></color>　按住 F 采集灵木和青玉，按 B 制作灵契符。\n"+
+        "<color=#5CDBCC><b>三  结契</b></color>　靠近虚弱的灵兽按 E 结契；按 P 放出伙伴，一起战斗。\n\n"+
+        "<color=#8FA9A4>进入世界后，右上角会一步步提示你该做什么（F2 跳过引导）。完整操作说明：Esc → 操作说明。</color>";
+    void DrawQuickStart(Rect area)
+    {
+        var st=St(ref sQuick,()=>new GUIStyle(M1UISkin.Body){fontSize=17,wordWrap=true,richText=true});
+        float tw=Mathf.Min(area.width-60,720),th=st.CalcHeight(new GUIContent(QuickStart),tw);
+        float bh=Mathf.Min(area.height,th+64f),by=area.y+(area.height-bh)*.5f; // 框按内容高度收紧，不留大片空白
+        GUI.Box(new Rect(area.x,by,area.width,bh),GUIContent.none);
+        GUI.Label(new Rect(area.x+(area.width-tw)*.5f,by+32f,tw,th),QuickStart,st);
+    }
     void DrawManual(Rect area)
     {
         GUI.Box(area,GUIContent.none);Rect view=new Rect(area.x+20,area.y+16,area.width-34,area.height-32);
@@ -112,7 +129,7 @@ public class M1GameManager : MonoBehaviour
         GUI.Label(new Rect(0,titleY+74,Screen.width,26),"星金营地 · M1 试玩版 "+Version,M1UISkin.Subtitle);
         M1UISkin.Divider(cx,titleY+110,Mathf.Min(560,Screen.width-60));
         float w=Mathf.Min(860,Screen.width-40),top=titleY+128,bottom=Screen.height-96;
-        DrawManual(new Rect((Screen.width-w)*.5f,top,w,Mathf.Max(160,bottom-top)));
+        DrawQuickStart(new Rect((Screen.width-w)*.5f,top,w,Mathf.Max(160,bottom-top)));
         if(GUI.Button(new Rect(cx-250,Screen.height-78,240,46),"开始探索"))StartGame();
         if(GUI.Button(new Rect(cx+10,Screen.height-78,240,46),"退出游戏"))QuitGame();
         GUI.Label(new Rect(0,Screen.height-26,Screen.width,20),AimLabel()+"  ·  按 Esc 随时打开菜单",St(ref sSmallC,()=>new GUIStyle(M1UISkin.Small){alignment=TextAnchor.MiddleCenter}));
@@ -141,24 +158,26 @@ public class M1GameManager : MonoBehaviour
     }
     void DrawHud(float cx)
     {
-        float w=Mathf.Min(320,Screen.width-24),x=14,y=14;
-        GUI.Box(new Rect(x,y,w,118),GUIContent.none);
-        GUI.Label(new Rect(x+14,y+8,w-28,22),"<b>山海驭灵录</b>  <color=#8FA9A4>"+Version+" · "+AimLabel()+"</color>",St(ref sBody14,()=>new GUIStyle(M1UISkin.Body){fontSize=14}));
+        // v0.8.2 HUD：面板加高、字号加大，不再截字；资源用颜色区分；操作说明交给右上角“当前目标”和新手引导，这里只留最常用的三个键
+        float w=Mathf.Min(380,Screen.width-24),x=14,y=14,h=132;
+        GUI.Box(new Rect(x,y,w,h),GUIContent.none);
+        GUI.Label(new Rect(x+16,y+10,w-32,22),"<b>山海驭灵录</b>  <color=#8FA9A4>"+Version+" · "+AimLabel()+"</color>",St(ref sBody14,()=>new GUIStyle(M1UISkin.Body){fontSize=15}));
         float hp=Mathf.Clamp01(playerHealth/100f);
-        GUI.Label(new Rect(x+14,y+34,60,18),"生命",M1UISkin.Small);
-        M1UISkin.Bar(new Rect(x+52,y+37,w-120,12),hp,Color.Lerp(M1UISkin.Danger,M1UISkin.Jade,hp));
-        GUI.Label(new Rect(x+w-64,y+32,54,20),Mathf.CeilToInt(playerHealth)+"/100",M1UISkin.Small);
+        GUI.Label(new Rect(x+16,y+40,44,20),"生命",St(ref sLabel15,()=>new GUIStyle(M1UISkin.Body){fontSize=15}));
+        M1UISkin.Bar(new Rect(x+60,y+45,w-140,13),hp,Color.Lerp(M1UISkin.Danger,M1UISkin.Jade,hp));
+        GUI.Label(new Rect(x+w-74,y+40,62,20),Mathf.CeilToInt(playerHealth)+"/100",St(ref sLabel15,()=>new GUIStyle(M1UISkin.Body){fontSize=15}));
         int pets=M1PetSystem.Instance?M1PetSystem.Instance.Count:0;
-        GUI.Label(new Rect(x+14,y+58,w-28,20),"灵兽 "+pets+"   灵木 "+M1ResourceCrafting.wood+"   青玉 "+M1ResourceCrafting.ore+"   灵契符 "+M1ResourceCrafting.seals,St(ref sBody14,()=>new GUIStyle(M1UISkin.Body){fontSize=14}));
-        GUI.Label(new Rect(x+14,y+84,w-28,30),"左键/J 蓄力 · R 换杖 · F 采集 · B 工坊\nE 结契 · P 队伍 · F1 图鉴 · Esc 菜单",M1UISkin.Small);
+        GUI.Label(new Rect(x+16,y+70,w-32,24),"<color=#5CDBCC>灵兽 "+pets+"</color>   <color=#C9A26A>灵木 "+M1ResourceCrafting.wood+"</color>   <color=#7FD6B0>青玉 "+M1ResourceCrafting.ore+"</color>   <color=#E0BA66>灵契符 "+M1ResourceCrafting.seals+"</color>",St(ref sRes16,()=>new GUIStyle(M1UISkin.Body){fontSize=16,fontStyle=FontStyle.Bold}));
+        GUI.Label(new Rect(x+16,y+102,w-32,20),"F1 图鉴 · P 队伍 · Esc 菜单（含完整操作说明）",St(ref sKeys13,()=>new GUIStyle(M1UISkin.Small){fontSize=13}));
         if(messageTimer>0f)
         {
-            var content=new GUIContent(message);float tw=Mathf.Min(Screen.width-40,M1UISkin.Toast.CalcSize(content).x+40);
+            var toast=St(ref sToast,()=>new GUIStyle(M1UISkin.Toast){fontSize=17});
+            var content=new GUIContent(message);float tw=Mathf.Min(Screen.width*.5f,toast.CalcSize(content).x+40);
             float fade=Mathf.Clamp01(messageTimer/.4f);var old=GUI.color;GUI.color=new Color(1,1,1,fade);
-            GUI.Box(new Rect(cx-tw*.5f,18,tw,40),content,M1UISkin.Toast);GUI.color=old;
+            GUI.Box(new Rect(cx-tw*.5f,18,tw,44),content,toast);GUI.color=old;
         }
     }
-    GUIStyle sBody14,sSmallC;
+    GUIStyle sBody14,sSmallC,sLabel15,sRes16,sKeys13,sToast,sQuick;
     static GUIStyle St(ref GUIStyle cache,System.Func<GUIStyle> make)=>cache??(cache=make());
     static string AimLabel()=>M1ChargeWeaponSystem.UsePointerAim?"鼠标准星 · 右键拖动转镜头":"中心准星";
     void OnGUI()

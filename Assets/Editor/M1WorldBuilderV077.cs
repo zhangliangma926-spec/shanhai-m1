@@ -192,9 +192,9 @@ public static class M1WorldBuilderV077
         SetupAtmosphere(k);
         var manager = new GameObject("M1 Game Manager").AddComponent<M1GameManager>();
         manager.gameObject.AddComponent<M1PetSystem>(); manager.gameObject.AddComponent<M1TamingGuide>(); manager.gameObject.AddComponent<M1ResourceCrafting>();
-        manager.gameObject.AddComponent<M1PetNameplates>(); manager.gameObject.AddComponent<M1AudioDirector>(); manager.gameObject.AddComponent<M1WildSpawner>();
+        manager.gameObject.AddComponent<M1PetNameplates>(); manager.gameObject.AddComponent<M1AudioDirector>(); manager.gameObject.AddComponent<M1WildSpawner>(); manager.gameObject.AddComponent<M1Onboarding>(); // v0.8.2 新手引导
 
-        terrainMat = TerrainMaterial(k); pathMat = Mat(k == 2 ? new Color(.62f, .5f, .42f) : new Color(.66f, .56f, .40f)); pathMat.SetFloat("_Glossiness", .05f);
+        terrainMat = TerrainMaterial(k); pathMat = Mat(k == 2 ? new Color(.56f, .45f, .38f) : new Color(.58f, .49f, .36f)); // v0.8.2：道路压暗 pathMat.SetFloat("_Glossiness", .05f);
         waterMat = Mat(new Color(.18f, .58f, .66f)); waterMat.SetFloat("_Glossiness", .9f); waterMat.EnableKeyword("_EMISSION"); waterMat.SetColor("_EmissionColor", new Color(.05f, .22f, .26f));
 
         BuildTerrain(worldName); BuildTrails(); if (k == 1) BuildStream();
@@ -219,21 +219,32 @@ public static class M1WorldBuilderV077
     }
 
     // ---------------- 天空、光照、雾 ----------------
+    /// v0.8.2 程序化天空：曝光略低、天色略深，地平线不再白成一片；峡谷偏暖
+    static Material Skybox(int k)
+    {
+        var sh = Shader.Find("Skybox/Procedural"); if (!sh) return AssetDatabase.GetBuiltinExtraResource<Material>("Default-Skybox.mat");
+        string dir = "Assets/Art/Materials/v0.8.2/"; Directory.CreateDirectory(dir); string path = dir + "Sky_" + k + ".mat";
+        var m = AssetDatabase.LoadAssetAtPath<Material>(path); if (!m) { m = new Material(sh); AssetDatabase.CreateAsset(m, path); }
+        m.SetFloat("_SunSize", .045f); m.SetFloat("_AtmosphereThickness", k == 2 ? 1.15f : .95f); m.SetFloat("_Exposure", .95f);
+        m.SetColor("_SkyTint", k == 2 ? new Color(.6f, .52f, .48f) : k == 1 ? new Color(.42f, .52f, .54f) : new Color(.45f, .52f, .62f));
+        m.SetColor("_GroundColor", new Color(.32f, .33f, .3f)); EditorUtility.SetDirty(m); return m;
+    }
     static void SetupAtmosphere(int k)
     {
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-        RenderSettings.ambientSkyColor = k == 2 ? new Color(.62f, .6f, .66f) : new Color(.56f, .7f, .82f);
-        RenderSettings.ambientEquatorColor = k == 2 ? new Color(.56f, .46f, .40f) : new Color(.46f, .56f, .48f);
-        RenderSettings.ambientGroundColor = new Color(.24f, .23f, .21f);
+        // v0.8.2 画面亮度：评价指出整体偏亮、远景发白。环境光整体压暗约 15%，阴影更深，层次更清楚
+        RenderSettings.ambientSkyColor = k == 2 ? new Color(.54f, .52f, .58f) : new Color(.46f, .58f, .70f);
+        RenderSettings.ambientEquatorColor = k == 2 ? new Color(.48f, .40f, .35f) : new Color(.38f, .46f, .40f);
+        RenderSettings.ambientGroundColor = new Color(.20f, .19f, .17f);
         // v0.7.8 虚实：指数平方雾，近处清晰、远处逐渐发虚淡入天色，形成空气透视的纵深感
         // v0.8.0：改为线性雾，正好在区块渲染距离（100 米）处完全融入雾色，看不到区块边缘，类似 MC 的雾
-        RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear; RenderSettings.fogStartDistance = RenderDistance * .45f; RenderSettings.fogEndDistance = RenderDistance * 1.02f;
-        RenderSettings.fogColor = k == 2 ? new Color(.82f, .72f, .66f) : k == 1 ? new Color(.62f, .78f, .78f) : new Color(.72f, .82f, .9f);
+        RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear; RenderSettings.fogStartDistance = RenderDistance * .3f; // v0.8.2：30 米起逐渐发虚，近、中、远三层更分明 RenderSettings.fogEndDistance = RenderDistance * 1.02f;
+        RenderSettings.fogColor = k == 2 ? new Color(.74f, .64f, .58f) : k == 1 ? new Color(.52f, .66f, .66f) : new Color(.62f, .72f, .80f); // v0.8.2：雾色压暗，远景不再发白
         RenderSettings.fogDensity = k == 1 ? .0042f : k == 2 ? .0036f : .0029f;
-        RenderSettings.skybox = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Skybox.mat");
+        RenderSettings.skybox = Skybox(k); // v0.8.2：自定义程序化天空，比默认天空略深
         var sun = new GameObject("太阳 · 主光").AddComponent<Light>(); sun.type = LightType.Directional;
-        sun.color = k == 2 ? new Color(1f, .86f, .7f) : new Color(1f, .95f, .84f); sun.intensity = 1.25f; sun.shadows = LightShadows.Soft; sun.shadowStrength = .75f;
-        sun.transform.rotation = Quaternion.Euler(46, -38, 0); RenderSettings.sun = sun;
+        sun.color = k == 2 ? new Color(1f, .86f, .7f) : new Color(1f, .95f, .84f); sun.intensity = 1.0f; sun.shadows = LightShadows.Soft; sun.shadowStrength = .88f; // v0.8.2：太阳 1.25 → 1.0，阴影加深
+        sun.transform.rotation = Quaternion.Euler(40, -38, 0); RenderSettings.sun = sun; // 太阳略低，影子更长，立体感更强
     }
 
     // ---------------- 地形 ----------------
