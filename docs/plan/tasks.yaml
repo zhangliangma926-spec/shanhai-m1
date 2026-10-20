@@ -34,7 +34,7 @@ tasks:
   - id: T2.1
     goal: G2
     title: 调整 2048 贴图的导入尺寸与压缩设置
-    status: pending
+    status: done
     owner: claude
     branch: optimize-import
     depends_on: []
@@ -44,7 +44,7 @@ tasks:
   - id: T2.2
     goal: G2
     title: 设置 FBX 网格压缩与 Read/Write
-    status: pending
+    status: done
     owner: claude
     branch: optimize-import
     depends_on: []
@@ -54,11 +54,12 @@ tasks:
   - id: T2.3
     goal: G2
     title: 在 Unity 中打开 optimize-import 分支检查画面
-    status: needs_user
+    status: done
     owner: user
     branch: optimize-import
     depends_on: [T2.1, T2.2]
     acceptance: 画面无明显变差，构建通过
+    # 用户已确认画面；构建通过尚未在 Unity 中实测
     updated: 2026-10-20
 
   - id: T3.1
@@ -84,7 +85,7 @@ tasks:
   - id: T4.1
     goal: G4
     title: 核对灵兽数量（代码 M1SpeciesDatabase.cs 为准）并更新文档
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -94,7 +95,7 @@ tasks:
   - id: T4.2
     goal: G4
     title: 统一世界尺寸描述
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -104,11 +105,12 @@ tasks:
   - id: T4.3
     goal: G4
     title: 更新过时的 README_启动与内容说明.md（v0.3）
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
     acceptance: 启动说明指向最新版本，并注明旧版本已归档
+    # 启动说明已更新（见 docs-fix 分支）；旧版本尚未归档，等用户确认
     updated: 2026-10-20
 
   - id: T5.1
