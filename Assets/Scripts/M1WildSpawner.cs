@@ -129,7 +129,7 @@ public class M1WildSpawner : MonoBehaviour
             go.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
             go.SetActive(true);
             var actor = go.GetComponent<M1Actor>();
-            if (actor) spawned.Add(actor);
+            if (actor) { spawned.Add(actor); go.name = actor.displayName + " · 刷新灵兽"; } // 层级里显示中文名，而不是 “(Clone)”
             M1GameManager.Instance?.ShowAction("附近出现了野生「" + (actor ? actor.displayName : species) + "」。");
             return;
         }

@@ -132,34 +132,36 @@ public static class M1WorldBuilderV077
     enum Cat { Tree, Bush, Plant, Grass, Flower, Rock, Pebble, Big, Prop }
 
     // ---------------- 物种表：同一个 Quaternius 模型按物种调色、调尺寸 ----------------
+    enum Flight { None, Hover, Perch }
     struct Species
     {
-        public string id, name, model; public float height; public Color tint;
-        public Species(string id, string name, string model, float height, Color tint) { this.id = id; this.name = name; this.model = model; this.height = height; this.tint = tint; }
+        public string id, name, model; public float height; public Color tint; public Flight flight;
+        public Species(string id, string name, string model, float height, Color tint, Flight flight = Flight.None) { this.id = id; this.name = name; this.model = model; this.height = height; this.tint = tint; this.flight = flight; }
     }
+    // v0.8.0：狐、鹿、犬换成 Quaternius 动物包的专用模型（带走、奔跑、攻击、受击动作）；飞行类异兽离地飞行
     static readonly Species[] Beasts =
     {
         new Species("blue_demon",     "岚角灵兽", LanJiao,                    1.7f, Color.white),
         new Species("spirit_beast",   "幽蓝翼兽", BlueDemon,                  1.9f, new Color(.55f,.82f,1f)),
-        new Species("wind_fox",       "赤尾灵狐", A.Creatures+"Wolf.fbx",     .95f, new Color(1f,.48f,.2f)),
+        new Species("wind_fox",       "赤尾灵狐", A.Animals+"Fox.fbx",        .9f,  new Color(1f,.48f,.2f)),
         new Species("stone_turtle",   "岩甲灵龟", null,                       1.2f, new Color(.42f,.56f,.44f)),
-        new Species("sky_bird",       "青羽灵雀", A.Creatures+"Eagle.fbx",    .85f, new Color(.35f,.85f,.95f)),
+        new Species("sky_bird",       "青羽灵雀", A.Creatures+"Eagle.fbx",    .85f, new Color(.35f,.85f,.95f), Flight.Perch),
         new Species("ember_cat",      "赤焰山猫", A.Creatures+"Cat.fbx",      .85f, new Color(1f,.42f,.18f)),
-        new Species("mist_deer",      "雾角灵鹿", A.Creatures+"Horse.fbx",    1.7f, new Color(.78f,.93f,.88f)),
+        new Species("mist_deer",      "雾角灵鹿", A.Animals+"Stag.fbx",       1.9f, new Color(.78f,.93f,.88f)),
         new Species("rock_boar",      "玄岩獠猪", A.Creatures+"Pig.fbx",      1.05f,new Color(.45f,.38f,.34f)),
         new Species("glass_marten",   "琉璃水貂", A.Creatures+"Cat.fbx",      .62f, new Color(.32f,.82f,.88f)),
-        new Species("moon_moth",      "月羽灵蝶", A.Creatures+"Bat.fbx",      .9f,  new Color(.82f,.68f,1f)),
-        new Species("six_eye_fox",    "六目灵狐", A.Creatures+"Dog.fbx",      .9f,  new Color(.98f,.68f,.26f)),
-        new Species("seven_face_fox", "七面幻狐", A.Creatures+"Wolf.fbx",     1.05f,new Color(.66f,.46f,.88f)),
-        new Species("red_xiao",       "赤霄朱雀", A.Creatures+"Eagle.fbx",    1.15f,new Color(1f,.28f,.14f)),
-        new Species("qing_jiao",      "青蛟",     A.Creatures+"Dragon.fbx",   1.9f, new Color(.2f,.78f,.72f)),
-        new Species("azure_crane",    "苍羽仙鹤", A.Creatures+"Eagle.fbx",    1.0f, new Color(.92f,.96f,1f)),
+        new Species("moon_moth",      "月羽灵蝶", A.Creatures+"Bat.fbx",      .9f,  new Color(.82f,.68f,1f),   Flight.Hover),
+        new Species("six_eye_fox",    "六目灵狐", A.Animals+"Fox.fbx",        .85f, new Color(.98f,.68f,.26f)),
+        new Species("seven_face_fox", "七面幻狐", A.Animals+"Fox.fbx",        1.0f, new Color(.66f,.46f,.88f)),
+        new Species("red_xiao",       "赤霄朱雀", A.Creatures+"Eagle.fbx",    1.15f,new Color(1f,.28f,.14f),   Flight.Perch),
+        new Species("qing_jiao",      "青蛟",     A.Creatures+"Dragon.fbx",   1.9f, new Color(.2f,.78f,.72f),  Flight.Hover),
+        new Species("azure_crane",    "苍羽仙鹤", A.Creatures+"Eagle.fbx",    1.0f, new Color(.92f,.96f,1f),   Flight.Perch),
         new Species("amber_leopard",  "琥珀雷豹", A.Creatures+"Cat.fbx",      1.15f,new Color(1f,.72f,.2f)),
         // v0.7.8 新增：同一批 CC0 模型换色、换体型得到的四种宠物
         new Species("frost_wolf",     "霜牙灵狼", A.Creatures+"Wolf.fbx",     1.0f, new Color(.62f,.9f,1f)),
         new Species("jade_ox",        "玉角灵牛", A.Creatures+"Cow.fbx",      1.45f,new Color(.72f,.92f,.78f)),
-        new Species("flame_llama",    "焰驼",     A.Creatures+"Llama.fbx",    1.35f,new Color(1f,.5f,.22f)),
-        new Species("jade_hound",     "白玉灵犬", A.Creatures+"Dog.fbx",      .95f, new Color(.92f,1f,.96f)),
+        new Species("flame_llama",    "焰驼",     A.Animals+"Alpaca.fbx",     1.45f,new Color(1f,.5f,.22f)),
+        new Species("jade_hound",     "白玉灵犬", A.Animals+"Husky.fbx",      1.0f, new Color(.92f,1f,.96f)),
     };
 
     // ---------------- 入口 ----------------
@@ -176,7 +178,7 @@ public static class M1WorldBuilderV077
         MakeWorld(Canyon, "玄岩谷地", 2, new[] { new PortalTo(Hub, "星金营地", -12f), new PortalTo(Forest, "青岚灵林", 12f) });
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(Hub, true), new EditorBuildSettingsScene(Forest, true), new EditorBuildSettingsScene(Canyon, true) };
         AssetDatabase.SaveAssets(); AssetDatabase.Refresh();
-        Debug.Log("M1 v0.7.7 worlds built: 640m, 3D characters, stylized nature.");
+        Debug.Log("M1 worlds built: 800m, 3D characters, stylized nature (" + M1GameManager.Version + ").");
     }
 
     struct PortalTo { public string scene, name; public float x; public PortalTo(string s, string n, float x) { scene = s; name = n; this.x = x; } }
@@ -351,6 +353,8 @@ public static class M1WorldBuilderV077
         foreach (var r in rs) { r.shadowCastingMode = small ? UnityEngine.Rendering.ShadowCastingMode.Off : UnityEngine.Rendering.ShadowCastingMode.On; }
         if (cat == Cat.Tree) { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Clamp(size * .035f, .22f, .6f) / s; c.height = size * .6f / s; c.center = new Vector3(b.center.x, b.min.y + size * .3f / s, b.center.z); }
         else if (cat == Cat.Rock || cat == Cat.Big || cat == Cat.Prop) { var c = go.AddComponent<BoxCollider>(); c.center = b.center; c.size = b.size * .9f; }
+        else if (cat == Cat.Bush) // v0.8.0：灌木、灵竹也是实体，不能再直接穿过（草、花、小石子仍可踩过）
+        { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Min(b.size.x, b.size.z) * .32f; c.height = b.size.y * .85f; c.center = new Vector3(b.center.x, b.min.y + b.size.y * .45f, b.center.z); }
         float cull = cat == Cat.Grass ? .03f : cat == Cat.Flower || cat == Cat.Pebble ? .025f : cat == Cat.Plant ? .018f : cat == Cat.Bush ? .012f : cat == Cat.Rock || cat == Cat.Prop ? .008f : .003f;
         var lod = go.AddComponent<LODGroup>(); lod.SetLODs(new[] { new LOD(cull, rs) }); lod.RecalculateBounds();
         GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
@@ -457,7 +461,7 @@ public static class M1WorldBuilderV077
     }
     static void Lantern(Vector3 at)
     {
-        var post = Prim(PrimitiveType.Cylinder, "青玉路灯", at + Vector3.up * .55f, new Vector3(.14f, .55f, .14f), stoneMat, Group(Cat.Prop));
+        var post = Prim(PrimitiveType.Cylinder, "青玉路灯", at + Vector3.up * .55f, new Vector3(.14f, .55f, .14f), stoneMat, Group(Cat.Prop), true);
         Prim(PrimitiveType.Sphere, "灯芯", new Vector3(0, 1.15f, 0), new Vector3(2.4f, .42f, 2.4f), crystalMat, post.transform);
     }
 
@@ -488,7 +492,7 @@ public static class M1WorldBuilderV077
             for (int i = 0; i < 70; i++) { float x = R(-Edge, Edge), z = R(-Edge, Edge); if (!Open(x, z, .2f) || Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) < 120f) continue; Spawn(K(rng.NextDouble() < .6 ? "cliff_large_rock" : "cliff_block_rock"), new Vector3(x, H(x, z), z), R(6f, 14f), R(0, 360), "玄岩崖壁", Cat.Big); }
             for (int i = 0; i < 12; i++) { float x = R(-Edge * .85f, Edge * .85f), z = R(-Edge * .85f, Edge * .85f); if (!Open(x, z, .3f)) continue; Spawn(K(rng.NextDouble() < .5 ? "statue_ring" : "statue_obelisk"), new Vector3(x, H(x, z), z), R(4f, 7f), R(0, 360), "上古石刻", Cat.Big); }
             for (int i = 0; i < 26; i++)
-            { float x = R(-30, 30), z = R(20, 60); if (Flat(x, z) > .9f && new Vector2(x, z - 30f).magnitude < 12f) continue; var shard = Prim(PrimitiveType.Cube, "玄岩谷青玉晶脉", new Vector3(x, H(x, z) + 1.2f, z), new Vector3(.45f, R(1.5f, 3.2f), .45f), crystalMat, Group(Cat.Prop)); shard.transform.rotation = Quaternion.Euler(R(-12, 12), R(0, 360), R(-12, 12)); }
+            { float x = R(-30, 30), z = R(20, 60); if (Flat(x, z) > .9f && new Vector2(x, z - 30f).magnitude < 12f) continue; var shard = Prim(PrimitiveType.Cube, "玄岩谷青玉晶脉", new Vector3(x, H(x, z) + 1.2f, z), new Vector3(.45f, R(1.5f, 3.2f), .45f), crystalMat, Group(Cat.Prop), true); shard.transform.rotation = Quaternion.Euler(R(-12, 12), R(0, 360), R(-12, 12)); }
         }
     }
     /// v0.7.8 道具：每个世界的探索地标（灵石祭坛 / 灵石丛 / 古碑阵），让地图上有更多可看、可绕的目标
@@ -501,7 +505,7 @@ public static class M1WorldBuilderV077
             for (int i = 0; i < 4; i++)
             {
                 float a = i * 90f * Mathf.Deg2Rad, x = c.x + Mathf.Sin(a) * 4.6f, z = c.z + Mathf.Cos(a) * 4.6f;
-                var shard = Prim(PrimitiveType.Cube, "祭坛灵晶", new Vector3(x, H(x, z) + 1.1f, z), new Vector3(.36f, 1.4f, .36f), crystalMat, Group(Cat.Prop));
+                var shard = Prim(PrimitiveType.Cube, "祭坛灵晶", new Vector3(x, H(x, z) + 1.1f, z), new Vector3(.36f, 1.4f, .36f), crystalMat, Group(Cat.Prop), true);
                 shard.transform.rotation = Quaternion.Euler(0, i * 90f, 8f);
             }
         }
@@ -515,7 +519,7 @@ public static class M1WorldBuilderV077
                 for (int j = 0; j < 2; j++)
                 {
                     float px = x + R(-1.6f, 1.6f), pz = z + R(-1.6f, 1.6f);
-                    var shard = Prim(PrimitiveType.Cube, "林间灵晶", new Vector3(px, H(px, pz) + .8f, pz), new Vector3(.25f, R(.9f, 1.5f), .25f), crystalMat, Group(Cat.Prop));
+                    var shard = Prim(PrimitiveType.Cube, "林间灵晶", new Vector3(px, H(px, pz) + .8f, pz), new Vector3(.25f, R(.9f, 1.5f), .25f), crystalMat, Group(Cat.Prop), true);
                     shard.transform.rotation = Quaternion.Euler(R(-10, 10), R(0, 360), R(-10, 10));
                 }
                 if (placed <= 2)
@@ -535,7 +539,7 @@ public static class M1WorldBuilderV077
                 for (int j = 0; j < 3; j++)
                 {
                     float px = x + R(-3f, 3f), pz = z + R(-3f, 3f);
-                    var shard = Prim(PrimitiveType.Cube, "古碑晶尖", new Vector3(px, H(px, pz) + .6f, pz), new Vector3(.3f, R(.8f, 1.4f), .3f), crystalMat, Group(Cat.Prop));
+                    var shard = Prim(PrimitiveType.Cube, "古碑晶尖", new Vector3(px, H(px, pz) + .6f, pz), new Vector3(.3f, R(.8f, 1.4f), .3f), crystalMat, Group(Cat.Prop), true);
                     shard.transform.rotation = Quaternion.Euler(R(-12, 12), R(0, 360), R(-12, 12));
                 }
             }
@@ -543,7 +547,8 @@ public static class M1WorldBuilderV077
     }
     static void MakeSpring()
     {
-        Prim(PrimitiveType.Cylinder, "中央灵泉 · 复活台", new Vector3(0, .12f, 30f), new Vector3(8f, .24f, 8f), stoneMat, null);
+        var dais = Prim(PrimitiveType.Cylinder, "中央灵泉 · 复活台", new Vector3(0, .12f, 30f), new Vector3(8f, .24f, 8f), stoneMat, null);
+        dais.AddComponent<MeshCollider>().sharedMesh = dais.GetComponent<MeshFilter>().sharedMesh; // 可以踩上去的实体台面（扁圆柱不能用默认胶囊碰撞体，会变成大球）
         Prim(PrimitiveType.Cylinder, "中央灵泉 · 水面", new Vector3(0, .28f, 30f), new Vector3(5.6f, .1f, 5.6f), waterMat, null);
         Prim(PrimitiveType.Cylinder, "中央灵泉 · 青玉环", new Vector3(0, .36f, 30f), new Vector3(2.4f, .12f, 2.4f), crystalMat, null);
         var l = new GameObject("灵泉光").AddComponent<Light>(); l.type = LightType.Point; l.color = new Color(.3f, .85f, 1f); l.intensity = 1.1f; l.range = 11f; l.transform.position = new Vector3(0, 1.2f, 30f);
@@ -596,10 +601,10 @@ public static class M1WorldBuilderV077
         var root = new GameObject("星金营地守卫 · 炎甲骸卫"); root.transform.position = at;
         var actor = root.AddComponent<M1Actor>(); actor.isEnemy = true; actor.displayName = "星金营地守卫";
         string path = A.Creatures + "Skeleton.fbx";
-        if (!AttachModel(root, path, 1.95f, new Color(1f, .55f, .32f), "enemy_skeleton"))
+        if (!AttachModel(root, path, 1.95f, new Color(1f, .55f, .32f), "enemy_skeleton", "炎甲骸卫"))
         { Prim(PrimitiveType.Capsule, "守卫躯干", new Vector3(0, .95f, 0), new Vector3(.9f, .9f, .8f), accentMat, root.transform); }
         var col = root.AddComponent<CapsuleCollider>(); col.height = 1.9f; col.center = new Vector3(0, .95f, 0); col.radius = .48f;
-        root.AddComponent<M1CreatureAnimator>();
+        Animate(root, path, 1.95f);
         return actor;
     }
 
@@ -618,19 +623,32 @@ public static class M1WorldBuilderV077
     static M1Actor MakeBeast(Species sp, Vector3 at)
     {
         var root = new GameObject(sp.name + " · 野生异兽"); root.transform.position = at; root.transform.rotation = Quaternion.Euler(0, R(0, 360), 0);
-        bool ok = sp.model != null && AttachModel(root, sp.model, sp.height, sp.tint, sp.id);
+        bool ok = sp.model != null && AttachModel(root, sp.model, sp.height, sp.tint, sp.id, sp.name);
         if (!ok) Turtle(root.transform, sp.tint);
         float h = Mathf.Max(sp.height, .9f);
         var col = root.AddComponent<CapsuleCollider>(); col.height = Mathf.Clamp(h, 1f, 2.6f); col.radius = Mathf.Clamp(h * .32f, .35f, .9f); col.center = new Vector3(0, col.height * .5f, 0);
+        if (sp.flight != Flight.None) { col.height = Mathf.Min(col.height, 1.4f); col.center = new Vector3(0, col.height * .5f, 0); } // 飞行类身体小，碰撞体随模型升空
         var actor = root.AddComponent<M1Actor>(); actor.isTameable = true; actor.displayName = sp.name; actor.speciesId = sp.id;
-        root.AddComponent<M1SpiritBeastMotion>(); root.AddComponent<M1CreatureAnimator>();
+        root.AddComponent<M1SpiritBeastMotion>(); Animate(root, sp.model, sp.height);
+        if (sp.flight != Flight.None)
+        {
+            var fly = root.AddComponent<M1FlyerMotion>();
+            if (sp.flight == Flight.Perch) { fly.style = M1FlyerMotion.Style.Perch; fly.hoverHeight = 1.3f; fly.bobAmplitude = .1f; fly.bobFrequency = 1.6f; fly.swayAmplitude = .05f; }
+            else if (sp.id == "moon_moth") { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 1.5f; fly.bobAmplitude = .26f; fly.bobFrequency = 2.4f; fly.swayAmplitude = .22f; fly.maxBank = 30f; } // 蝶：忽上忽下地扑扇
+            else { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 1.8f; fly.bobAmplitude = .22f; fly.bobFrequency = .45f; fly.swayAmplitude = .3f; fly.maxBank = 18f; } // 蛟：慢速游动
+        }
         return actor;
     }
+    /// 动画驱动：按体型换算速度；没有奔跑动作的模型走得快时加快步频
+    static M1CreatureAnimator Animate(GameObject root, string path, float height)
+    {
+        var ad = root.AddComponent<M1CreatureAnimator>(); ad.bodySize = Mathf.Max(height, .5f); ad.hasRun = path != null && A.HasRunClip(path); return ad;
+    }
     /// 把模型挂到 root 下：统一高度、贴地、按物种调色、自动接上动画控制器
-    static bool AttachModel(GameObject root, string path, float height, Color tint, string key)
+    static bool AttachModel(GameObject root, string path, float height, Color tint, string key, string displayName)
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path); if (!prefab) return false;
-        var model = (GameObject)PrefabUtility.InstantiatePrefab(prefab); model.name = Path.GetFileNameWithoutExtension(path) + " · 模型"; model.transform.SetParent(root.transform, false);
+        var model = (GameObject)PrefabUtility.InstantiatePrefab(prefab); model.name = displayName + " · 模型（" + Path.GetFileNameWithoutExtension(path) + "）"; model.transform.SetParent(root.transform, false);
         var b = A.LocalBounds(prefab); float s = height / Mathf.Max(b.size.y, .01f);
         model.transform.localScale = Vector3.one * s; model.transform.localPosition = new Vector3(-b.center.x * s, -b.min.y * s, -b.center.z * s);
         A.ApplyTextures(model); A.Tint(model, key, tint);
@@ -654,31 +672,57 @@ public static class M1WorldBuilderV077
     static void MakeAmbientLife()
     {
         var root = new GameObject("氛围生物").transform;
-        string[] herd = kind == 0 ? new[] { "Sheep", "Llama", "Horse", "Pug" } : kind == 1 ? new[] { "Cow", "Horse", "Slime", "Sheep" } : new[] { "Zebra", "Llama", "Skeleton", "Slime" };
-        float[] heights = { 1.1f, 1.6f, 1.7f, .6f };
+        // v0.8.0：牧群用中文名；营地的巴哥犬换成柴犬，灵林的黄牛换成鹿群，牧群有实体碰撞不再能穿过去
+        string[] herd = kind == 0 ? new[] { "Sheep", "Llama", "Horse", "ShibaInu" } : kind == 1 ? new[] { "Deer", "Horse", "Slime", "Sheep" } : new[] { "Zebra", "Llama", "Skeleton", "Slime" };
         int made = 0;
         for (int tries = 0; tries < 300 && made < Mathf.RoundToInt(8 * Dens); tries++)
         {
             float x = R(-Edge * .8f, Edge * .8f), z = R(-Edge * .6f, Edge * .8f); if (!Open(x, z, .5f) || new Vector2(x, z - 30f).magnitude < 50f) continue;
             made++;
-            int type = rng.Next(herd.Length); int count = type == 3 ? 3 : rng.Next(3, 7);
+            int type = rng.Next(herd.Length); string kindName = herd[type]; int count = kindName == "ShibaInu" ? 3 : rng.Next(3, 7);
+            var info = Ambient(kindName);
             for (int i = 0; i < count; i++)
             {
                 float px = x + R(-6, 6), pz = z + R(-6, 6);
-                var go = new GameObject(herd[type] + " · 牧群"); go.transform.SetParent(root); go.transform.position = new Vector3(px, H(px, pz), pz); go.transform.rotation = Quaternion.Euler(0, R(0, 360), 0);
-                Color tint = herd[type] == "Slime" ? (kind == 1 ? new Color(.4f, .9f, .55f) : new Color(.85f, .55f, .9f)) : herd[type] == "Skeleton" ? new Color(.9f, .85f, .7f) : Color.white;
-                if (!AttachModel(go, A.Creatures + herd[type] + ".fbx", heights[type] * R(.9f, 1.1f), tint, "ambient_" + herd[type] + kind)) { Object.DestroyImmediate(go); continue; }
-                go.AddComponent<M1CreatureAnimator>(); var c = go.AddComponent<M1AmbientCritter>(); c.radius = 9f; c.speed = herd[type] == "Slime" ? .7f : 1.1f;
+                var go = new GameObject(info.name + " · 牧群"); go.transform.SetParent(root); go.transform.position = new Vector3(px, H(px, pz), pz); go.transform.rotation = Quaternion.Euler(0, R(0, 360), 0);
+                Color tint = kindName == "Slime" ? (kind == 1 ? new Color(.4f, .9f, .55f) : new Color(.85f, .55f, .9f)) : kindName == "Skeleton" ? new Color(.9f, .85f, .7f) : Color.white;
+                float h = info.height * R(.9f, 1.1f);
+                if (!AttachModel(go, info.path, h, tint, "ambient_" + kindName + kind, info.name)) { Object.DestroyImmediate(go); continue; }
+                Animate(go, info.path, h); var c = go.AddComponent<M1AmbientCritter>(); c.radius = 9f; c.speed = kindName == "Slime" ? .7f : 1.1f;
+                SolidBody(go, h);
             }
         }
-        string flyer = kind == 2 ? "Bat" : "Eagle";
+        string flyer = kind == 2 ? "Bat" : "Eagle"; string flyerName = kind == 2 ? "夜蝠" : "苍鹰";
         for (int i = 0; i < 5; i++)
         {
             float x = R(-Edge * .7f, Edge * .7f), z = R(-Edge * .5f, Edge * .7f);
-            var go = new GameObject(flyer + " · 盘旋飞鸟"); go.transform.SetParent(root); go.transform.position = new Vector3(x, H(x, z), z);
-            if (!AttachModel(go, A.Creatures + flyer + ".fbx", flyer == "Bat" ? 1.2f : 1.5f, Color.white, "ambient_" + flyer)) { Object.DestroyImmediate(go); continue; }
-            go.AddComponent<M1CreatureAnimator>(); var c = go.AddComponent<M1AmbientCritter>(); c.mode = M1AmbientCritter.Mode.Circle; c.radius = R(14f, 30f); c.height = R(16f, 28f); c.speed = R(1.6f, 2.6f);
+            var go = new GameObject(flyerName + " · 盘旋飞鸟"); go.transform.SetParent(root); go.transform.position = new Vector3(x, H(x, z), z);
+            float h = flyer == "Bat" ? 1.2f : 1.5f;
+            if (!AttachModel(go, A.Creatures + flyer + ".fbx", h, Color.white, "ambient_" + flyer, flyerName)) { Object.DestroyImmediate(go); continue; }
+            Animate(go, A.Creatures + flyer + ".fbx", h); var c = go.AddComponent<M1AmbientCritter>(); c.mode = M1AmbientCritter.Mode.Circle; c.radius = R(14f, 30f); c.height = R(16f, 28f); c.speed = R(1.6f, 2.6f);
         }
+    }
+    struct AmbientInfo { public string name, path; public float height; }
+    static AmbientInfo Ambient(string model)
+    {
+        switch (model)
+        {
+            case "Sheep": return new AmbientInfo { name = "绵羊", path = A.Creatures + "Sheep.fbx", height = 1.1f };
+            case "Llama": return new AmbientInfo { name = "羊驼", path = A.Animals + "Alpaca.fbx", height = 1.6f };
+            case "Horse": return new AmbientInfo { name = "骏马", path = A.Creatures + "Horse.fbx", height = 1.7f };
+            case "ShibaInu": return new AmbientInfo { name = "柴犬", path = A.Animals + "ShibaInu.fbx", height = .65f };
+            case "Deer": return new AmbientInfo { name = "林鹿", path = A.Animals + "Deer.fbx", height = 1.5f };
+            case "Slime": return new AmbientInfo { name = "灵胶", path = A.Creatures + "Slime.fbx", height = .6f };
+            case "Zebra": return new AmbientInfo { name = "斑马", path = A.Creatures + "Zebra.fbx", height = 1.7f };
+            case "Skeleton": return new AmbientInfo { name = "游荡骸骨", path = A.Creatures + "Skeleton.fbx", height = 1.7f };
+            default: return new AmbientInfo { name = model, path = A.Creatures + model + ".fbx", height = 1.2f };
+        }
+    }
+    /// 会移动的氛围动物：胶囊碰撞体 + 运动学刚体，玩家撞上会被挡住，不会穿模
+    static void SolidBody(GameObject go, float height)
+    {
+        var col = go.AddComponent<CapsuleCollider>(); col.height = Mathf.Max(height, .5f); col.radius = Mathf.Clamp(height * .3f, .22f, .6f); col.center = new Vector3(0, col.height * .5f, 0);
+        var rb = go.AddComponent<Rigidbody>(); rb.isKinematic = true; rb.useGravity = false;
     }
 
     // ---------------- 采集点与工坊 ----------------
@@ -749,10 +793,10 @@ public static class M1WorldBuilderV077
     }
 
     // ---------------- 小工具 ----------------
-    static GameObject Prim(PrimitiveType type, string name, Vector3 pos, Vector3 scale, Material mat, Transform parent)
+    static GameObject Prim(PrimitiveType type, string name, Vector3 pos, Vector3 scale, Material mat, Transform parent, bool solid = false)
     {
         var o = GameObject.CreatePrimitive(type); o.name = name; if (parent) o.transform.SetParent(parent, false); o.transform.localPosition = pos; o.transform.localScale = scale;
-        var c = o.GetComponent<Collider>(); if (c) Object.DestroyImmediate(c); var r = o.GetComponent<Renderer>(); if (r && mat) r.sharedMaterial = mat; return o;
+        var c = o.GetComponent<Collider>(); if (c && !solid) Object.DestroyImmediate(c); var r = o.GetComponent<Renderer>(); if (r && mat) r.sharedMaterial = mat; return o;
     }
     static Transform FindDeep(Transform t, string name) { if (t.name == name) return t; foreach (Transform c in t) { var r = FindDeep(c, name); if (r) return r; } return null; }
     static void SetWorldScale(Transform t, float s) { var ls = t.lossyScale; t.localScale = new Vector3(s / Mathf.Max(ls.x, 1e-5f), s / Mathf.Max(ls.y, 1e-5f), s / Mathf.Max(ls.z, 1e-5f)); }

@@ -17,15 +17,17 @@ public static class M1AssetSetupV077
 {
     public const string Root = "Assets/Art/Models/v077/";
     public const string Characters = Root + "Characters/", Creatures = Root + "Creatures/", Nature = Root + "Nature/", Kenney = Root + "Kenney/", Textures = Root + "Textures/";
+    // v0.8.0：Quaternius「Ultimate Animated Animals」（CC0），带 Walk / Gallop / Attack / HitReact 等完整动作
+    public const string Animals = "Assets/Art/Models/v080/Animals/";
     const string MatDir = "Assets/Art/Materials/v0.7.7/", CtrlDir = "Assets/Art/Animators/v0.7.7/";
 
-    static readonly string[] LoopKeys = { "idle", "walk", "run", "fly", "swim", "jump" };
+    static readonly string[] LoopKeys = { "idle", "walk", "run", "gallop", "fly", "swim", "jump", "eating" };
     static readonly string[] OneShotKeys = { "death", "attack", "hit", "roll", "pickup", "spell", "punch", "bite", "spawn" };
 
     // ---------- 1. 导入设置 ----------
     public static void ConfigureImports()
     {
-        foreach (var dir in new[] { Characters, Creatures })
+        foreach (var dir in new[] { Characters, Creatures, Animals })
             foreach (var path in FbxIn(dir)) ConfigureAnimatedModel(path);
         ConfigureAnimatedModel("Assets/Art/Models/External_Quaternius/BlueDemon.fbx"); // 旧版的幽蓝翼兽，同为 Quaternius 模型
         foreach (var dir in new[] { Nature, Kenney })
@@ -47,7 +49,7 @@ public static class M1AssetSetupV077
         foreach (var c in clips)
         {
             string n = Short(c.name).ToLowerInvariant();
-            bool oneShot = OneShotKeys.Any(n.Contains) && !n.Contains("idle");
+            bool oneShot = OneShotKeys.Any(n.Contains) && (!n.Contains("idle") || n.Contains("hitreact")); // Idle_HitReact 是受击动作，只播一次
             c.loopTime = !oneShot && LoopKeys.Any(n.Contains);
             c.loopPose = false;
         }
@@ -63,6 +65,10 @@ public static class M1AssetSetupV077
     }
 
     public static string Short(string clipName) { int i = clipName.LastIndexOf('|'); return i >= 0 ? clipName.Substring(i + 1) : clipName; }
+
+    /// 模型是否带奔跑类动作（Run / Gallop / Running）。没有的话，动画驱动会把走路动作加快播放来跟上速度。
+    public static bool HasRunClip(string fbxPath) =>
+        AssetDatabase.LoadAllAssetsAtPath(fbxPath).OfType<AnimationClip>().Any(c => { var n = Short(c.name).ToLowerInvariant(); return !c.name.StartsWith("__preview__") && (n == "run" || n.StartsWith("gallop") && !n.Contains("jump") || n.Contains("running")); });
 
     // ---------- 2. 贴图材质 ----------
     static readonly Dictionary<string, string> TexAlias = new Dictionary<string, string>
@@ -154,9 +160,9 @@ public static class M1AssetSetupV077
 
         var idle = FindClip(clips, "Idle", "Skeleton_Idle", "Slime_Idle", "Dragon_Flying", "Bat_Flying", "Flying", "Swimming") ?? clips[0];
         var walk = FindClip(clips, "Walk", "Walking", "Slime_Walk", "WalkSlow", "Skeleton_Running", "Dragon_Flying", "Bat_Flying", "Flying", "Jump");
-        var run = FindClip(clips, "Run", "Skeleton_Running", "Running");
+        var run = FindClip(clips, "Run", "Gallop", "Skeleton_Running", "Running");
         var attack = player ? FindClip(clips, "Spell1", "Staff_Attack", "Punch") : FindClip(clips, "Attack", "Dragon_Attack", "Bat_Attack", "Slime_Attack", "Skeleton_Attack", "Punch", "Bite", "Jump");
-        var hit = FindClip(clips, "RecieveHit", "Dragon_Hit", "Bat_Hit", "Hit");
+        var hit = FindClip(clips, "RecieveHit", "Dragon_Hit", "Bat_Hit", "Idle_HitReact_Left", "Hit");
         var roll = player ? FindClip(clips, "Roll") : null;
         var castIdle = player ? FindClip(clips, "Idle_Weapon", "Idle_Attacking") : null;
         var castMove = player ? FindClip(clips, "Run_Weapon") : null;

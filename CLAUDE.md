@@ -25,12 +25,14 @@
 | v0.7.6 / v0.7.7 | 3D 骨骼动画主角与异兽，640 米大地图，风格化植被，流畅度优化 |
 | v0.7.7_1020_0945 | 能正常启动的稳定版（回退参考），瞄准方式为鼠标（B 版） |
 | v0.7.9 | 800 米地图；100 米刷新圈，圈内定时刷野生灵兽；44 个采集资源点（按住 F 读条）；防穿模摆放、模型贴地、中文层级命名 |
+| v0.8.0 | 新动物模型（狐、雄鹿、哈士奇、林鹿、柴犬，Quaternius CC0）；步频随速度同步；飞行类异兽离地飞行（`M1FlyerMotion`）；牧群、灌木、灵晶、路灯加实体碰撞；动物中文命名；版本号统一取 `M1GameManager.Version` |
 
 v0.7.9 改动文件已经写入工程的 `Assets\Scripts` 和 `Assets\Editor`，并且文件大小与改动包一致。2026-10-20 已用命令行构建成功并能进入世界，成品在 `05_成品交付\Windows\v0.7.9\`，交付包在 `05_成品交付\山海驭灵录_v0.7.9_可直接传输\`，验证记录在 `04_验证记录\v0.7.9\`。刷新圈和采集**还没有完整手动试玩**。
 
 ## 构建与运行
 
-- Unity 菜单：**Shanhai → Build v0.7.7 · 3D 角色 + 大地图（B 版）**，构建完成后会自动启动游戏。菜单名仍写 v0.7.7，但它调用的是 `M1WorldBuilderV077.BuildAll()`，当前生成的是 v0.7.9 内容（800 米地图）。
+- Unity 菜单：**Shanhai → Build v0.7.7 · 3D 角色 + 大地图（B 版）**，构建完成后会自动启动游戏。菜单名仍写 v0.7.7，但它调用的是 `M1WorldBuilderV077.BuildAll()`，生成的是当前版本内容（800 米地图）。输出目录和版本号取自 `M1GameManager.Version`。
+- 命令行构建：`Unity.exe -batchmode -quit -projectPath <工程目录> -executeMethod M1WindowsBuildV077Command.Build -logFile <日志>`。本机 Unity 在 `D:\游戏开发\Unity\Unity\Hub\Editor\6000.6.6f1\Editor\Unity.exe`。构建会重新生成场景和动画控制器（内部 ID 变化），这些变化不必提交。
 - 构建命令由 `Assets\Editor\M1WindowsBuildV077Command.cs` 提供；早期版本各有对应的 `M1WindowsBuildV0xxCommand.cs`。
 - 构建出错时，把 Unity Console 里的红色报错发给 Claude 来定位。
 - Unity 日志位于 `Logs\Editor.log`。
@@ -43,7 +45,9 @@ v0.7.9 改动文件已经写入工程的 `Assets\Scripts` 和 `Assets\Editor`，
 - `M1ResourceCrafting.cs`：资源合成（v0.7.9 有改动）。
 - `M1Actor.cs`、`M1PlayerController.cs`、`M1CameraFollow.cs`：角色与镜头控制。
 - `M1ChargeWeaponSystem.cs`、`M1SpellProjectile.cs`：蓄力攻击与法术弹道。
-- `M1PetSystem.cs`、`M1SpiritBeastMotion.cs`、`M1CreatureAnimator.cs`：灵兽队伍与动画。
+- `M1PetSystem.cs`、`M1SpiritBeastMotion.cs`、`M1CreatureAnimator.cs`：灵兽队伍与动画（v0.8.0 起动画步频随速度同步）。
+- `M1FlyerMotion.cs`：飞行类异兽离地飞行、起伏、侧倾（v0.8.0 新增）。
+- `M1AmbientCritter.cs`：牧群与盘旋飞鸟等氛围动物。
 - `M1SpeciesDatabase.cs`：灵兽数据库。
 - `M1TamingGuide.cs`、`M1PetNameplates.cs`：收服引导与灵兽头顶名牌。
 - `M1UISkin.cs`：UI 样式。
@@ -54,7 +58,7 @@ v0.7.9 改动文件已经写入工程的 `Assets\Scripts` 和 `Assets\Editor`，
 
 ## 美术资源（`Assets\Art`）
 
-- 模型：`Models\v077\Characters`（法师等）、`Models\v077\Creatures`（生物）、`Models\v077\Nature`（树木等）、`Models\External_Quaternius`（外部 CC0 模型，如 BlueDemon）。
+- 模型：`Models\v077\Characters`（法师等）、`Models\v077\Creatures`（生物）、`Models\v077\Nature`（树木等）、`Models\External_Quaternius`（外部 CC0 模型，如 BlueDemon）、`Models\v080\Animals`（v0.8.0 新增的 Quaternius 动物包，来源见其中 `ATTRIBUTION.md`）。
 - 贴图：`Models\v077\Textures`（树皮、叶子、岩石等，多为 2048 分辨率 PNG）。
 - 地形网格：`Meshes\v0.7.7\Terrain_0/1/2.asset`，每个约 13MB。
 - 其他：`Art\Materials`、`Art\Animators`、`Art\Textures`。
