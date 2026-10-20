@@ -219,7 +219,7 @@ tasks:
   - id: T7.8
     goal: G9
     title: 主角走路 / 奔跑姿态（Blender 或 Mixamo 动作）
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -229,7 +229,7 @@ tasks:
   - id: T7.9
     goal: G9
     title: 鸟类专用模型与起飞、滑翔、扑翼、落地动作
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -239,7 +239,7 @@ tasks:
   - id: T7.10
     goal: G9
     title: 月羽灵蝶换成蝴蝶模型并做扑翼动作
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -249,7 +249,7 @@ tasks:
   - id: T7.11
     goal: G9
     title: 岩甲灵龟升级（AI 生成 + Blender 减面绑骨）
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -259,7 +259,7 @@ tasks:
   - id: T7.12
     goal: G9
     title: 猫系三种灵兽外形区分
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -269,7 +269,7 @@ tasks:
   - id: T7.13
     goal: G9
     title: 灵兽攻击动作（冲撞、俯冲、伸颈咬）
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
