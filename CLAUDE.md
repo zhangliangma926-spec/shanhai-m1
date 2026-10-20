@@ -25,7 +25,7 @@
 | v0.7.6 / v0.7.7 | 3D 骨骼动画主角与异兽，640 米大地图，风格化植被，流畅度优化 |
 | v0.7.7_1020_0945 | 能正常启动的稳定版（回退参考），瞄准方式为鼠标（B 版） |
 | v0.7.9 | 800 米地图；100 米刷新圈，圈内定时刷野生灵兽；44 个采集资源点（按住 F 读条）；防穿模摆放、模型贴地、中文层级命名 |
-| v0.8.0 | 新动物模型（狐、雄鹿、哈士奇、林鹿、柴犬，Quaternius CC0）；步频随速度同步；飞行类异兽离地飞行（`M1FlyerMotion`）；牧群、灌木、灵晶、路灯加实体碰撞；动物中文命名；版本号统一取 `M1GameManager.Version` |
+| v0.8.0 | 新动物模型（狐、雄鹿、哈士奇、羊驼、林鹿、柴犬，Quaternius CC0）；步频随速度同步；飞行类异兽离地 2.6–3.4 米飞行（`M1FlyerMotion`）；贴地倾斜（`M1GroundAlign`）；牧群避障、刷新避开实体、草不长进石头；牧群、灌木、灵晶、路灯加实体碰撞；树叶补色（之前发白）；无缝地面贴图与双尺度地面 shader（`Shanhai/VertexColorLitV080`）；草坪加密；动物中文命名；版本号统一取 `M1GameManager.Version` |
 
 v0.7.9 改动文件已经写入工程的 `Assets\Scripts` 和 `Assets\Editor`，并且文件大小与改动包一致。2026-10-20 已用命令行构建成功并能进入世界，成品在 `05_成品交付\Windows\v0.7.9\`，交付包在 `05_成品交付\山海驭灵录_v0.7.9_可直接传输\`，验证记录在 `04_验证记录\v0.7.9\`。刷新圈和采集**还没有完整手动试玩**。
 
@@ -47,6 +47,7 @@ v0.7.9 改动文件已经写入工程的 `Assets\Scripts` 和 `Assets\Editor`，
 - `M1ChargeWeaponSystem.cs`、`M1SpellProjectile.cs`：蓄力攻击与法术弹道。
 - `M1PetSystem.cs`、`M1SpiritBeastMotion.cs`、`M1CreatureAnimator.cs`：灵兽队伍与动画（v0.8.0 起动画步频随速度同步）。
 - `M1FlyerMotion.cs`：飞行类异兽离地飞行、起伏、侧倾（v0.8.0 新增）。
+- `M1GroundAlign.cs`：四足动物随坡面倾斜贴地（v0.8.0 新增）。
 - `M1AmbientCritter.cs`：牧群与盘旋飞鸟等氛围动物。
 - `M1SpeciesDatabase.cs`：灵兽数据库。
 - `M1TamingGuide.cs`、`M1PetNameplates.cs`：收服引导与灵兽头顶名牌。

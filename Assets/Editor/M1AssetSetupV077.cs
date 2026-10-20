@@ -78,6 +78,15 @@ public static class M1AssetSetupV077
     // v0.7.8：材质名叫 "Material" 的很多模型都有（猪、骷髅等），原先的别名会误套树叶贴图。
     // 现在只在 Nature 自然包里把 "Material" 映射为扭曲树叶贴图。
     const string NatureOnlyAlias = "Material", NatureOnlyTexture = "Leaves_TwistedTree";
+    // v0.8.0：风格化自然包的树叶贴图只是白色叶形遮罩，颜色原本在作者的 Blender 着色器里，导出 FBX 后丢失，
+    // 之前材质底色设成白色，导致树叶、灌木整片发白。这里按叶子种类补上底色（贴图仍负责叶形和镂空）。
+    static readonly Dictionary<string, Color> LeafTint = new Dictionary<string, Color>
+    {
+        { "Leaves_NormalTree", new Color(.40f, .64f, .25f) },   // 普通阔叶树：鲜绿
+        { "Leaves_TwistedTree", new Color(.52f, .66f, .27f) },  // 扭曲树、灌木：偏黄的绿
+        { "Leaves_Pine", new Color(.22f, .44f, .27f) },         // 松针：深绿
+        { "Leaves", new Color(.38f, .62f, .27f) },              // 三叶草等小植物
+    };
     static readonly Dictionary<string, Material> texturedCache = new Dictionary<string, Material>();
 
     /// 把实例上的材质换成“同名贴图”的材质（主角、风格化自然包）。找不到贴图的材质保持原样。
@@ -110,7 +119,8 @@ public static class M1AssetSetupV077
         string path = MatDir + "Tex_" + matName + ".mat";
         var m = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (!m) { m = new Material(Shader.Find("Standard")); AssetDatabase.CreateAsset(m, path); }
-        m.mainTexture = tex; m.color = Color.white; m.SetFloat("_Glossiness", .12f); m.SetFloat("_Metallic", 0f);
+        string tintKey = matName == NatureOnlyAlias ? NatureOnlyTexture : matName;
+        m.mainTexture = tex; m.color = LeafTint.TryGetValue(tintKey, out var leaf) ? leaf : Color.white; m.SetFloat("_Glossiness", .12f); m.SetFloat("_Metallic", 0f);
         bool cutout = matName.StartsWith("Leaves") || matName.StartsWith("Leaf") || matName == "Grass" || matName == "Flowers" || (matName == NatureOnlyAlias && natureContext);
         if (cutout)
         {

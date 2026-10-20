@@ -281,7 +281,7 @@ public static class M1WorldBuilderV077
         const int cells = 300; int side = cells + 1; var mesh = new Mesh { name = worldName + "_800m地形", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 }; // 361×361 顶点超过 16 位索引上限，必须用 32 位
         var v = new Vector3[side * side]; var colors = new Color[v.Length]; var uv = new Vector2[v.Length]; var tri = new int[cells * cells * 6];
         for (int ix = 0; ix <= cells; ix++) for (int iz = 0; iz <= cells; iz++)
-        { int i = ix * side + iz; float x = -Half + Size * ix / cells, z = -Half + Size * iz / cells; float y = H(x, z); v[i] = new Vector3(x, y, z); colors[i] = TerrainColor(x, z, y); uv[i] = new Vector2(x / 14f, z / 14f); }
+        { int i = ix * side + iz; float x = -Half + Size * ix / cells, z = -Half + Size * iz / cells; float y = H(x, z); v[i] = new Vector3(x, y, z); colors[i] = TerrainColor(x, z, y); uv[i] = new Vector2(x / 10f, z / 10f); } // v0.8.0：细节贴图每 10 米平铺一次，草叶纹理更细
         int t = 0; for (int ix = 0; ix < cells; ix++) for (int iz = 0; iz < cells; iz++) { int a = ix * side + iz, b = (ix + 1) * side + iz, c = a + 1, d = b + 1; tri[t++] = a; tri[t++] = c; tri[t++] = b; tri[t++] = b; tri[t++] = c; tri[t++] = d; }
         mesh.vertices = v; mesh.colors = colors; mesh.uv = uv; mesh.triangles = tri; mesh.RecalculateNormals(); mesh.RecalculateBounds();
         string dir = "Assets/Art/Meshes/v0.7.7/"; Directory.CreateDirectory(dir); string mp = dir + "Terrain_" + kind + ".asset"; AssetDatabase.DeleteAsset(mp); AssetDatabase.CreateAsset(mesh, mp);
@@ -289,20 +289,47 @@ public static class M1WorldBuilderV077
     }
     static Material TerrainMaterial(int k)
     {
-        var sh = Shader.Find("Shanhai/VertexColorLitV066"); if (!sh) sh = Shader.Find("Standard");
+        var sh = Shader.Find("Shanhai/VertexColorLitV080"); if (!sh) sh = Shader.Find("Shanhai/VertexColorLitV066"); if (!sh) sh = Shader.Find("Standard");
         string dir = "Assets/Art/Materials/v0.7.7/"; Directory.CreateDirectory(dir); string path = dir + "Terrain_" + k + ".mat";
         var m = AssetDatabase.LoadAssetAtPath<Material>(path); if (!m) { m = new Material(sh); AssetDatabase.CreateAsset(m, path); } else m.shader = sh;
         if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", GroundTexture(k)); if (m.HasProperty("_Color")) m.color = Color.white; return m;
     }
+    /// v0.8.0 地面细节贴图：512 像素、四边无缝平铺（旧版用 Perlin 噪声，每 14 米能看到接缝）。
+    /// 草地世界画上细小的草叶笔触和土点，峡谷画砂砾斑点；颜色由地形顶点色决定，这里只是明暗细节。
     static Texture2D GroundTexture(int k)
     {
-        string dir = "Assets/Art/Textures/v0.7.7/"; Directory.CreateDirectory(dir); string path = dir + "Ground_" + k + ".asset";
-        var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path); if (existing) return existing;
-        const int size = 256; var tex = new Texture2D(size, size, TextureFormat.RGB24, true) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Trilinear };
-        var px = new Color[size * size];
+        string dir = "Assets/Art/Textures/v0.8.0/"; Directory.CreateDirectory(dir); string path = dir + "Ground_" + k + ".asset";
+        AssetDatabase.DeleteAsset(path); // 每次构建重新生成，参数改了能立即生效
+        const int size = 512; var tex = new Texture2D(size, size, TextureFormat.RGB24, true) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Trilinear, anisoLevel = 4 };
+        var v = new float[size * size];
         for (int y = 0; y < size; y++) for (int x = 0; x < size; x++)
-        { float a = Mathf.PerlinNoise(x * .03f + k * 9f, y * .03f), b = Mathf.PerlinNoise(x * .13f + 70f, y * .13f + 30f), c = Mathf.PerlinNoise(x * .45f + 13f, y * .45f + 47f); float v = .82f + (a - .5f) * .22f + (b - .5f) * .16f + (c - .5f) * .1f; px[y * size + x] = new Color(v, v, v); }
-        tex.SetPixels(px); tex.Apply(true, false); AssetDatabase.CreateAsset(tex, path); return tex;
+            v[y * size + x] = .86f + (TileNoise(x, y, size, 6) - .5f) * .16f + (TileNoise(x, y, size, 24) - .5f) * .12f + (TileNoise(x, y, size, 96) - .5f) * .1f;
+        var rnd = new System.Random(4100 + k);
+        if (k == 2)
+        {
+            for (int i = 0; i < 9000; i++) // 砂砾：小圆点，亮暗随机
+            {
+                int cx = rnd.Next(size), cy = rnd.Next(size); float r = 1f + (float)rnd.NextDouble() * 2.2f, d = rnd.NextDouble() < .55 ? -.12f : .09f;
+                for (int oy = -3; oy <= 3; oy++) for (int ox = -3; ox <= 3; ox++) { float q = Mathf.Sqrt(ox * ox + oy * oy); if (q > r) continue; int px = (cx + ox + size) % size, py = (cy + oy + size) % size; v[py * size + px] += d * (1f - q / (r + .01f)); }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 26000; i++) // 草叶：2–7 像素的细笔触，大多接近竖直，一半偏暗一半偏亮
+            {
+                int cx = rnd.Next(size), cy = rnd.Next(size); int len = 2 + rnd.Next(6); float ang = (float)(rnd.NextDouble() - .5) * 1.4f + Mathf.PI * .5f;
+                float d = rnd.NextDouble() < .5 ? -.09f : .07f; float dx = Mathf.Cos(ang), dy = Mathf.Sin(ang);
+                for (int s = 0; s < len; s++) { int px = ((int)(cx + dx * s) % size + size) % size, py = ((int)(cy + dy * s) % size + size) % size; v[py * size + px] += d * (1f - s / (float)len * .5f); }
+            }
+            for (int i = 0; i < 1400; i++) // 土点：零星的小块深色
+            {
+                int cx = rnd.Next(size), cy = rnd.Next(size); float r = 1.5f + (float)rnd.NextDouble() * 2.5f;
+                for (int oy = -4; oy <= 4; oy++) for (int ox = -4; ox <= 4; ox++) { float q = Mathf.Sqrt(ox * ox + oy * oy); if (q > r) continue; int px = (cx + ox + size) % size, py = (cy + oy + size) % size; v[py * size + px] -= .08f * (1f - q / r); }
+            }
+        }
+        var px2 = new Color[size * size];
+        for (int i = 0; i < v.Length; i++) { float c = Mathf.Clamp(v[i], .55f, 1.08f); px2[i] = new Color(c, c, c); }
+        tex.SetPixels(px2); tex.Apply(true, false); AssetDatabase.CreateAsset(tex, path); return tex;
     }
 
     // ---------------- 道路与溪流 ----------------
@@ -337,6 +364,8 @@ public static class M1WorldBuilderV077
         var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab); if (!go) return null;
         var b = A.LocalBounds(prefab); float dim = byHeight ? b.size.y : Mathf.Max(b.size.x, b.size.z); float s = size / Mathf.Max(dim, .01f);
         float fr = Footprint(cat, size);
+        // v0.8.0：草、花、小植物不再长进树干、石头、灌木里
+        if (fr <= 0f && overlapCheck && (cat == Cat.Grass || cat == Cat.Flower || cat == Cat.Plant) && Occupied(pos.x, pos.z, .15f)) { Object.DestroyImmediate(go); return null; }
         if (fr > 0f)
         {
             pos.y = MinGround(pos.x, pos.z, fr);
@@ -404,24 +433,25 @@ public static class M1WorldBuilderV077
         Scatter(rocks, Cat.Rock, () => kind == 2 && rng.NextDouble() < .25 ? new Pick2(K(rng.NextDouble() < .5 ? "rock_tall" : "stone_tall"), R(3f, 7f)) : new Pick2(N(Pick(Rocks)), R(1.2f, kind == 2 ? 4.5f : 3f)), .15f);
         Scatter(bushes, Cat.Bush, () => new Pick2(N(Pick(Bushes)), R(1.1f, 2f)), .1f);
         Scatter(plants, Cat.Plant, () => kind == 1 && rng.NextDouble() < .3 ? new Pick2(N(Pick(Mushrooms)), R(.35f, .8f)) : new Pick2(N(Pick(Plants)), R(.6f, 1.5f)), .1f);
-        ScatterMeadow(Mathf.RoundToInt(grass * Dens / 5f));
+        ScatterMeadow(Mathf.RoundToInt(grass * Dens / 5f * (kind == 2 ? 1.2f : 1.7f))); // v0.8.0：草坪更密（峡谷偏干，只略加）
         Scatter(flowers, Cat.Flower, () => new Pick2(N(Pick(Flowers)), R(.3f, .65f)), .05f);
         Scatter(kind == 2 ? 300 : 200, Cat.Pebble, () => new Pick2(N(Pick(Pebbles)), R(.25f, .7f)), .3f, false);
     }
-    /// v0.7.9 草坪：按草坪斑块成簇种草（每簇 3–7 丛，少量夹花），替代原来零散的单丛草
+    /// v0.7.9 草坪：按草坪斑块成簇种草，替代原来零散的单丛草。
+    /// v0.8.0：草坪斑块更大（阈值 .45 → .36），每簇 4–9 丛、铺得更开
     static void ScatterMeadow(int clusters)
     {
-        int placed = 0, tries = 0;
+        int placed = 0, tries = 0; float threshold = kind == 2 ? .45f : .36f;
         while (placed < clusters && tries++ < clusters * 8)
         {
             float x = R(-Edge, Edge), z = R(-Edge, Edge);
-            if (Mathf.PerlinNoise((x + 300f) * .01f, (z - 200f) * .01f) < .45f) continue; // 只在草坪斑块上长草
+            if (Mathf.PerlinNoise((x + 300f) * .01f, (z - 200f) * .01f) < threshold) continue; // 只在草坪斑块上长草
             if (!Open(x, z, .3f)) continue;
             placed++;
-            int blades = rng.Next(3, 8);
+            int blades = rng.Next(4, 10);
             for (int j = 0; j < blades; j++)
             {
-                float px = x + R(-1.8f, 1.8f), pz = z + R(-1.8f, 1.8f);
+                float px = x + R(-2.2f, 2.2f), pz = z + R(-2.2f, 2.2f);
                 if (!Open(px, pz, .3f)) continue;
                 bool flower = rng.NextDouble() < .2;
                 string asset = flower ? N(Pick(Flowers)) : N(Pick(Grasses));
@@ -458,6 +488,14 @@ public static class M1WorldBuilderV077
                 for (int j = 0; j < 4; j++) { float px = x + side * R(.5f, 3f), pz = z + R(-3f, 3f); Spawn(N(Pick(Flowers)), new Vector3(px, H(px, pz), pz), R(.35f, .6f), R(0, 360), "路边花", Cat.Flower); }
             }
         for (float x = -220f; x < 222f; x += 30f) { float z = CrossZ(x) + 3.6f; Lantern(new Vector3(x, H(x, z), z)); }
+        // v0.8.0：路边草带，让土路和草地之间有自然的过渡，而不是一条硬边
+        if (kind != 2)
+            for (float z = -90f; z < 240f; z += 1.7f)
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    float x = PathCenter(z) + side * R(2.9f, 4.4f);
+                    Spawn(N(Pick(Grasses)), new Vector3(x, H(x, z), z), R(.45f, .9f), R(0, 360), "路边草", Cat.Grass);
+                }
     }
     static void Lantern(Vector3 at)
     {
@@ -616,6 +654,7 @@ public static class M1WorldBuilderV077
             float r = 30f + i * 15.5f + attempt * 3f, a = (i * 137.5f + kind * 40f + attempt * 23f) * Mathf.Deg2Rad;
             float x = Mathf.Sin(a) * r, z = 30f + Mathf.Cos(a) * r; z = Mathf.Clamp(z, -(Edge - 40f), Edge - 40f); x = Mathf.Clamp(x, -(Edge - 40f), Edge - 40f);
             if (Mathf.Abs(x - PathCenter(z)) < 7f || (kind == 1 && Mathf.Abs(z - StreamZ(x)) < 5f)) continue;
+            if (Occupied(x, z, 1.4f)) continue; // v0.8.0：不出生在树、石头、灌木里
             return new Vector3(x, H(x, z), z);
         }
         float fx = 20f + i * 4f; return new Vector3(fx, H(fx, 60f), 60f);
@@ -630,12 +669,14 @@ public static class M1WorldBuilderV077
         if (sp.flight != Flight.None) { col.height = Mathf.Min(col.height, 1.4f); col.center = new Vector3(0, col.height * .5f, 0); } // 飞行类身体小，碰撞体随模型升空
         var actor = root.AddComponent<M1Actor>(); actor.isTameable = true; actor.displayName = sp.name; actor.speciesId = sp.id;
         root.AddComponent<M1SpiritBeastMotion>(); Animate(root, sp.model, sp.height);
+        if (sp.flight == Flight.None && ok && sp.id != "blue_demon" && sp.id != "spirit_beast") root.AddComponent<M1GroundAlign>(); // 四足动物随坡面倾斜；两足的岚角、翼兽保持直立
         if (sp.flight != Flight.None)
         {
             var fly = root.AddComponent<M1FlyerMotion>();
-            if (sp.flight == Flight.Perch) { fly.style = M1FlyerMotion.Style.Perch; fly.hoverHeight = 1.3f; fly.bobAmplitude = .1f; fly.bobFrequency = 1.6f; fly.swayAmplitude = .05f; }
-            else if (sp.id == "moon_moth") { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 1.5f; fly.bobAmplitude = .26f; fly.bobFrequency = 2.4f; fly.swayAmplitude = .22f; fly.maxBank = 30f; } // 蝶：忽上忽下地扑扇
-            else { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 1.8f; fly.bobAmplitude = .22f; fly.bobFrequency = .45f; fly.swayAmplitude = .3f; fly.maxBank = 18f; } // 蛟：慢速游动
+            // v0.8.0：离地高度明显高于体型，看起来是在空中飞，而不是贴着地面“飞”
+            if (sp.flight == Flight.Perch) { fly.style = M1FlyerMotion.Style.Perch; fly.hoverHeight = 2.6f; fly.bobAmplitude = .18f; fly.bobFrequency = 1.4f; fly.swayAmplitude = .12f; }
+            else if (sp.id == "moon_moth") { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 2.6f; fly.bobAmplitude = .38f; fly.bobFrequency = 2.2f; fly.swayAmplitude = .3f; fly.maxBank = 30f; } // 蝶：忽上忽下地扑扇
+            else { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 3.4f; fly.bobAmplitude = .35f; fly.bobFrequency = .4f; fly.swayAmplitude = .45f; fly.maxBank = 18f; } // 蛟：在空中慢速游动
         }
         return actor;
     }
@@ -684,12 +725,13 @@ public static class M1WorldBuilderV077
             for (int i = 0; i < count; i++)
             {
                 float px = x + R(-6, 6), pz = z + R(-6, 6);
+                if (Occupied(px, pz, .9f)) continue; // v0.8.0：不出生在树、石头、灌木里
                 var go = new GameObject(info.name + " · 牧群"); go.transform.SetParent(root); go.transform.position = new Vector3(px, H(px, pz), pz); go.transform.rotation = Quaternion.Euler(0, R(0, 360), 0);
                 Color tint = kindName == "Slime" ? (kind == 1 ? new Color(.4f, .9f, .55f) : new Color(.85f, .55f, .9f)) : kindName == "Skeleton" ? new Color(.9f, .85f, .7f) : Color.white;
                 float h = info.height * R(.9f, 1.1f);
                 if (!AttachModel(go, info.path, h, tint, "ambient_" + kindName + kind, info.name)) { Object.DestroyImmediate(go); continue; }
                 Animate(go, info.path, h); var c = go.AddComponent<M1AmbientCritter>(); c.radius = 9f; c.speed = kindName == "Slime" ? .7f : 1.1f;
-                SolidBody(go, h);
+                SolidBody(go, h); if (kindName != "Slime" && kindName != "Skeleton") go.AddComponent<M1GroundAlign>();
             }
         }
         string flyer = kind == 2 ? "Bat" : "Eagle"; string flyerName = kind == 2 ? "夜蝠" : "苍鹰";

@@ -121,7 +121,7 @@ public class M1WildSpawner : MonoBehaviour
             float a = Random.Range(0f, Mathf.PI * 2f), r = Random.Range(minSpawnDistance, radius);
             float x = p.x + Mathf.Sin(a) * r, z = p.z + Mathf.Cos(a) * r;
             if (x < b.min.x + 10f || x > b.max.x - 10f || z < b.min.z + 10f || z > b.max.z - 10f) continue;
-            if (IsCrowded(x, z)) continue;
+            if (IsCrowded(x, z) || Blocked(new Vector3(x, GroundAt(x, z), z))) continue;
 
             string species = speciesKeys[Random.Range(0, speciesKeys.Count)];
             var go = Instantiate(templates[species]);
@@ -133,6 +133,20 @@ public class M1WildSpawner : MonoBehaviour
             M1GameManager.Instance?.ShowAction("附近出现了野生「" + (actor ? actor.displayName : species) + "」。");
             return;
         }
+    }
+
+    static readonly Collider[] overlapBuf = new Collider[8];
+    /// v0.8.0：刷新点和树、石头、灌木、牧群等实体重叠时换个位置，避免灵兽一出现就卡在树干或石头里
+    bool Blocked(Vector3 at)
+    {
+        int n = Physics.OverlapCapsuleNonAlloc(at + Vector3.up * .8f, at + Vector3.up * 1.7f, .7f, overlapBuf, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < n; i++)
+        {
+            var c = overlapBuf[i];
+            if (!c || (c is MeshCollider mc && System.Array.IndexOf(terrain, mc) >= 0)) continue;
+            return true;
+        }
+        return false;
     }
 
     bool IsCrowded(float x, float z)
