@@ -189,7 +189,7 @@ tasks:
   - id: T7.5
     goal: G8
     title: 新手引导分步提示
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -199,7 +199,7 @@ tasks:
   - id: T7.6
     goal: G8
     title: HUD 清晰（文字溢出、字号、当前目标面板）
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
@@ -209,7 +209,7 @@ tasks:
   - id: T7.7
     goal: G8
     title: 画面亮度与层次
-    status: pending
+    status: done
     owner: claude
     branch: ""
     depends_on: []
