@@ -83,7 +83,7 @@ public class M1GameManager : MonoBehaviour
         "【安全与退出】Esc 暂停、继续、重新开始、查看本说明、回到标题或退出。生命归零后会在当前世界的中央灵泉复活。\n\n"+
         "【声音】本试用版含原创程序合成的森林氛围、法杖动作音与各异兽音色。可在正式试听后再调整混音与叫声。";
 
-    public const string Version="v0.8.2";
+    public const string Version="v0.8.3";
     // 说明文字里的【小标题】自动染成金色加粗
     static readonly string ManualRich=ManualText.Replace("【","<color=#E0BA66><b>【").Replace("】","】</b></color>");
 

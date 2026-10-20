@@ -49,7 +49,7 @@ public static class M1WindowsBuildV077Command
             if (report.summary.result != BuildResult.Succeeded) throw new Exception("编译失败：" + report.summary.result + "（详见 Console）");
             File.WriteAllText(Path.Combine(dir, "aim-mode.txt"), "mouse\n");
             File.WriteAllText(Path.Combine(dir, "BUILD_INFO.txt"),
-                "M1 " + M1GameManager.Version + " · 无限区块地图 · 新动物模型与动作 · 战斗反馈与瞄准修正\nBuilt: " + DateTime.Now + "\nAim: mouse (B)\nBuild size bytes: " + report.summary.totalSize + "\n" +
+                "M1 " + M1GameManager.Version + " · 无限区块地图 · 新手引导 · Blender 新模型与动作（主角、灵蝶、灵鸟、灵龟、猫系、攻击）\nBuilt: " + DateTime.Now + "\nAim: mouse (B)\nBuild size bytes: " + report.summary.totalSize + "\n" +
                 "Assets: Quaternius (CC0), Kenney (CC0)\n");
         }
         finally { EditorUtility.ClearProgressBar(); }

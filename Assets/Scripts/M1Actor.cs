@@ -59,7 +59,7 @@ public class M1Actor : MonoBehaviour
         {
             var p=player.transform;float d=Vector3.Distance(transform.position,p.position);
             if(d>1.8f&&d<13f){MoveSafely(p.position,(isEnemy?1.7f:1.45f));Face(p.position);}
-            if(d<=2f&&attackTimer<=0f){attackTimer=isEnemy?1.2f:1.55f;if(animDriver)animDriver.Attack();game.DamagePlayer(isEnemy?8f:5f);if(wild)M1AudioDirector.PlayCreatureAction(speciesId,transform.position,.30f);}
+            if(d<=2f&&attackTimer<=0f){attackTimer=isEnemy?1.2f:1.55f;if(animDriver)animDriver.Attack();if(wild)M1AudioDirector.PlayCreatureAction(speciesId,transform.position,.30f);StartCoroutine(HitPlayerLater(animDriver?animDriver.attackHitDelay:.25f,isEnemy?8f:5f));} // v0.8.3：伤害在攻击动作命中那一帧结算
             attackTimer-=dt;
         }
         else if(wild&&(!player||(transform.position-player.transform.position).sqrMagnitude<SimulateRadius*SimulateRadius)) Roam(dt);
@@ -68,7 +68,7 @@ public class M1Actor : MonoBehaviour
             Vector3 target=followTarget.position-followTarget.forward*1.35f+followTarget.right*.85f;
             if(Vector3.Distance(transform.position,target)>1.6f)MoveSafely(target,2.5f);
             if(game&&game.enemy&&game.enemy.gameObject.activeSelf&&companionAttackTimer<=0f&&Vector3.Distance(transform.position,game.enemy.transform.position)<2.7f&&Vector3.Distance(followTarget.position,game.enemy.transform.position)<5.5f)
-            {companionAttackTimer=1.8f;if(animDriver)animDriver.Attack();M1AudioDirector.PlayCreatureAction(speciesId,transform.position,.36f);game.enemy.TakeDamage(8f);game.ShowAction(displayName+" 发出攻击叫声并协同攻击测试敌人！");}
+            {companionAttackTimer=1.8f;if(animDriver)animDriver.Attack();M1AudioDirector.PlayCreatureAction(speciesId,transform.position,.36f);StartCoroutine(HitEnemyLater(animDriver?animDriver.attackHitDelay:.25f,game.enemy));game.ShowAction(displayName+" 发出攻击叫声并协同攻击测试敌人！");}
             companionAttackTimer-=dt;
         }
     }
@@ -116,6 +116,16 @@ public class M1Actor : MonoBehaviour
         if(isTameable&&before>.10f&&after<=.10f&&health>0f){M1CombatFeedback.Popup(top+Vector3.up*.5f,"可结契！",M1CombatFeedback.Calm,28f);M1GameManager.Instance?.ShowAction(displayName+" 已虚弱，靠近后按 E 结契（需要灵契符）。");}
         if(body&&hasBodyColor){body.material.color=Color.Lerp(bodyColor,Color.white,.75f);CancelInvoke(nameof(RestoreColor));Invoke(nameof(RestoreColor),.12f);}
         if(health<=0f){M1GameManager.Instance?.ActorDefeated(this);gameObject.SetActive(false);}
+    }
+    // v0.8.3：等攻击动作打到“命中帧”再结算伤害；这段时间里目标跑出攻击范围（2.6 米）就算躲开了
+    System.Collections.IEnumerator HitPlayerLater(float delay,float dmg)
+    {
+        yield return new WaitForSeconds(delay);var game=M1GameManager.Instance;if(!game||!game.player||!gameObject.activeInHierarchy||tamed)yield break;
+        if(Vector3.Distance(transform.position,game.player.transform.position)<=2.6f)game.DamagePlayer(dmg);else M1CombatFeedback.Popup(game.player.transform.position+Vector3.up*2.1f,"闪避",M1CombatFeedback.Calm,20f);
+    }
+    System.Collections.IEnumerator HitEnemyLater(float delay,M1Actor target)
+    {
+        yield return new WaitForSeconds(delay);if(target&&target.gameObject.activeInHierarchy&&Vector3.Distance(transform.position,target.transform.position)<=3.2f)target.TakeDamage(8f);
     }
     void RestoreColor(){if(body&&hasBodyColor)body.material.color=bodyColor;} // 恢复模型原本的颜色（原来固定成蓝/红，会把贴图模型染错色）
 }

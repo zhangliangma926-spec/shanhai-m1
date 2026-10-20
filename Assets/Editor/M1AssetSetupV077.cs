@@ -21,15 +21,17 @@ public static class M1AssetSetupV077
     public const string Animals = "Assets/Art/Models/v080/Animals/";
     // v0.8.0：用 Blender 脚本绑骨、做动作的灵兽模型（岚角灵兽等）
     public const string Beasts = "Assets/Art/Models/v080/Beasts/";
+    // v0.8.3：阶段 C 用 Blender 做的模型与动作（主角走跑、灵蝶、三种灵鸟、苍鹰、灵龟、猫系三种、猪冲撞），来源见目录里的 ATTRIBUTION_清单.md
+    public const string V083 = "Assets/Art/Models/v083/";
     const string MatDir = "Assets/Art/Materials/v0.7.7/", CtrlDir = "Assets/Art/Animators/v0.7.7/";
 
-    static readonly string[] LoopKeys = { "idle", "walk", "run", "gallop", "fly", "swim", "jump", "eating" };
+    static readonly string[] LoopKeys = { "idle", "walk", "run", "gallop", "fly", "glide", "swim", "jump", "eating" };
     static readonly string[] OneShotKeys = { "death", "attack", "hit", "roll", "pickup", "spell", "punch", "bite", "spawn" };
 
     // ---------- 1. 导入设置 ----------
     public static void ConfigureImports()
     {
-        foreach (var dir in new[] { Characters, Creatures, Animals, Beasts })
+        foreach (var dir in new[] { Characters, Creatures, Animals, Beasts, V083 })
             foreach (var path in FbxIn(dir)) ConfigureAnimatedModel(path);
         ConfigureAnimatedModel("Assets/Art/Models/External_Quaternius/BlueDemon.fbx"); // 旧版的幽蓝翼兽，同为 Quaternius 模型
         foreach (var dir in new[] { Nature, Kenney })
@@ -188,6 +190,8 @@ public static class M1AssetSetupV077
         ctrl.AddParameter("Attack", AnimatorControllerParameterType.Trigger);
         ctrl.AddParameter("Hit", AnimatorControllerParameterType.Trigger);
         ctrl.AddParameter("Roll", AnimatorControllerParameterType.Trigger);
+        ctrl.AddParameter("TakeOff", AnimatorControllerParameterType.Trigger); // v0.8.3 飞行类起飞 / 降落
+        ctrl.AddParameter("Land", AnimatorControllerParameterType.Trigger);
         var sm = ctrl.layers[0].stateMachine;
 
         // 移动混合：玩家 0 / 1.6 / 5 m/s，异兽 0 / .8 / 3 m/s
@@ -209,10 +213,13 @@ public static class M1AssetSetupV077
         AddOneShot(sm, move, attack, "Attack", .08f);
         AddOneShot(sm, move, hit, "Hit", .06f);
         AddOneShot(sm, move, roll, "Roll", .05f);
+        if (!player) { AddOneShot(sm, move, FindExact(clips, "TakeOff"), "TakeOff", .06f); AddOneShot(sm, move, FindExact(clips, "Land"), "Land", .08f); }
         EditorUtility.SetDirty(ctrl); AssetDatabase.SaveAssets();
         ctrlCache[key] = ctrl; return ctrl;
     }
 
+    /// 只按完整片段名匹配（TakeOff / Land 不能用模糊匹配，否则会套到别的动作上）
+    static AnimationClip FindExact(AnimationClip[] clips, string key) => clips.FirstOrDefault(c => Short(c.name).Equals(key, System.StringComparison.OrdinalIgnoreCase));
     static AnimationClip FindClip(AnimationClip[] clips, params string[] keys)
     {
         foreach (var k in keys) { var hit = clips.FirstOrDefault(c => Short(c.name).Equals(k, System.StringComparison.OrdinalIgnoreCase)); if (hit) return hit; }

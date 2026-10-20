@@ -15,6 +15,8 @@ public class M1CreatureAnimator : MonoBehaviour
     public float bodySize = 1f;
     [Tooltip("没有奔跑动作的模型（只有走路），速度超过走路时把走路动作加快播放。")]
     public bool hasRun = true;
+    [Tooltip("攻击动作的命中帧（秒）：伤害在这个时间点结算，和动作对齐（v0.8.3）。")]
+    public float attackHitDelay = .25f;
     /// 由飞行组件每帧设置：悬停时也要保持“飞行”动作，而不是落地待机。
     [System.NonSerialized] public float minBlend;
 
@@ -43,4 +45,6 @@ public class M1CreatureAnimator : MonoBehaviour
 
     public void Attack() { if (HasAnimator) anim.SetTrigger(AttackId); }
     public void Hit() { if (HasAnimator) anim.SetTrigger(HitId); }
+    /// 触发一次性动作（TakeOff / Land 等）；控制器里没有这个参数时忽略
+    public void Trigger(string name) { if (!HasAnimator) return; foreach (var p in anim.parameters) if (p.name == name && p.type == AnimatorControllerParameterType.Trigger) { anim.SetTrigger(name); return; } }
 }

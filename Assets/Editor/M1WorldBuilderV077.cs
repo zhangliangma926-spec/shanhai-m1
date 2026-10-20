@@ -146,19 +146,19 @@ public static class M1WorldBuilderV077
         new Species("blue_demon",     "岚角灵兽", LanJiao,                    1.7f, Color.white),
         new Species("spirit_beast",   "幽蓝翼兽", BlueDemon,                  1.9f, new Color(.55f,.82f,1f)),
         new Species("wind_fox",       "赤尾灵狐", A.Animals+"Fox.fbx",        .9f,  new Color(1f,.48f,.2f)),
-        new Species("stone_turtle",   "岩甲灵龟", A.Beasts+"StoneTurtle_Rigged.fbx", 1.15f, Color.white),
-        new Species("sky_bird",       "青羽灵雀", A.Creatures+"Eagle.fbx",    .85f, new Color(.35f,.85f,.95f), Flight.Perch),
-        new Species("ember_cat",      "赤焰山猫", A.Beasts+"Cat_v080.fbx",      .85f, new Color(1f,.42f,.18f)),
+        new Species("stone_turtle",   "岩甲灵龟", A.V083+"RockTurtle_v083.fbx", 1.15f, Color.white),
+        new Species("sky_bird",       "青羽灵雀", A.V083+"SpiritSparrow_v083.fbx", .75f, new Color(.35f,.85f,.95f), Flight.Perch),
+        new Species("ember_cat",      "赤焰山猫", A.V083+"Lynx_v083.fbx",     .85f, new Color(1f,.42f,.18f)),
         new Species("mist_deer",      "雾角灵鹿", A.Animals+"Stag.fbx",       1.9f, new Color(.78f,.93f,.88f)),
-        new Species("rock_boar",      "玄岩獠猪", A.Beasts+"Pig_v080.fbx",      1.05f,new Color(.45f,.38f,.34f)),
-        new Species("glass_marten",   "琉璃水貂", A.Beasts+"Cat_v080.fbx",      .62f, new Color(.32f,.82f,.88f)),
-        new Species("moon_moth",      "月羽灵蝶", A.Creatures+"Bat.fbx",      .9f,  new Color(.82f,.68f,1f),   Flight.Hover),
+        new Species("rock_boar",      "玄岩獠猪", A.V083+"Pig_v083.fbx",      1.05f,new Color(.45f,.38f,.34f)),
+        new Species("glass_marten",   "琉璃水貂", A.V083+"Mink_v083.fbx",     .55f, new Color(.32f,.82f,.88f)),
+        new Species("moon_moth",      "月羽灵蝶", A.V083+"Butterfly_v083.fbx", 1.1f, new Color(.82f,.68f,1f),   Flight.Hover),
         new Species("six_eye_fox",    "六目灵狐", A.Animals+"Fox.fbx",        .85f, new Color(.98f,.68f,.26f)),
         new Species("seven_face_fox", "七面幻狐", A.Animals+"Fox.fbx",        1.0f, new Color(.66f,.46f,.88f)),
-        new Species("red_xiao",       "赤霄朱雀", A.Creatures+"Eagle.fbx",    1.15f,new Color(1f,.28f,.14f),   Flight.Perch),
+        new Species("red_xiao",       "赤霄朱雀", A.V083+"Vermilion_v083.fbx", 1.15f,new Color(1f,.28f,.14f),   Flight.Perch),
         new Species("qing_jiao",      "青蛟",     A.Creatures+"Dragon.fbx",   1.9f, new Color(.2f,.78f,.72f),  Flight.Hover),
-        new Species("azure_crane",    "苍羽仙鹤", A.Creatures+"Eagle.fbx",    1.0f, new Color(.92f,.96f,1f),   Flight.Perch),
-        new Species("amber_leopard",  "琥珀雷豹", A.Beasts+"Cat_v080.fbx",      1.15f,new Color(1f,.72f,.2f)),
+        new Species("azure_crane",    "苍羽仙鹤", A.V083+"Crane_v083.fbx",    1.4f, Color.white,   Flight.Perch),
+        new Species("amber_leopard",  "琥珀雷豹", A.V083+"Leopard_v083.fbx",  1.15f,new Color(1f,.72f,.2f)),
         // v0.7.8 新增：同一批 CC0 模型换色、换体型得到的四种宠物
         new Species("frost_wolf",     "霜牙灵狼", A.Beasts+"Wolf_v080.fbx",     1.0f, new Color(.62f,.9f,1f)),
         new Species("jade_ox",        "玉角灵牛", A.Creatures+"Cow.fbx",      1.45f,new Color(.72f,.92f,.78f)),
@@ -667,7 +667,7 @@ public static class M1WorldBuilderV077
         var cc = root.AddComponent<CharacterController>(); cc.height = 1.75f; cc.radius = .32f; cc.center = new Vector3(0, .9f, 0); cc.slopeLimit = 50f; cc.stepOffset = .35f;
         var actor = root.AddComponent<M1Actor>(); actor.displayName = "山海旅者";
         var rig = new GameObject("角色造型").transform; rig.SetParent(root.transform, false);
-        string wizard = A.Characters + "Wizard.fbx";
+        string wizard = A.V083 + "Wizard_v083.fbx"; // v0.8.3：Blender 重做的走跑（脚步速度与移动速度一致），其它动作同原版
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(wizard);
         if (prefab)
         {
@@ -732,7 +732,7 @@ public static class M1WorldBuilderV077
             var fly = root.AddComponent<M1FlyerMotion>();
             // v0.8.0：离地高度明显高于体型，看起来是在空中飞，而不是贴着地面“飞”
             if (sp.flight == Flight.Perch) { fly.style = M1FlyerMotion.Style.Perch; fly.hoverHeight = 2.6f; fly.bobAmplitude = .18f; fly.bobFrequency = 1.4f; fly.swayAmplitude = .12f; }
-            else if (sp.id == "moon_moth") { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 2.6f; fly.bobAmplitude = .38f; fly.bobFrequency = 2.2f; fly.swayAmplitude = .3f; fly.maxBank = 30f; } // 蝶：忽上忽下地扑扇
+            else if (sp.id == "moon_moth") { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 2.6f; fly.bobAmplitude = .24f; fly.bobFrequency = 2.2f; fly.swayAmplitude = .3f; fly.maxBank = 30f; } // v0.8.3：新蝴蝶自带扑翼起伏，飞行组件的起伏调小 // 蝶：忽上忽下地扑扇
             else { fly.style = M1FlyerMotion.Style.Hover; fly.hoverHeight = 3.4f; fly.bobAmplitude = .35f; fly.bobFrequency = .4f; fly.swayAmplitude = .45f; fly.maxBank = 18f; } // 蛟：在空中慢速游动
         }
         return actor;
@@ -740,7 +740,19 @@ public static class M1WorldBuilderV077
     /// 动画驱动：按体型换算速度；没有奔跑动作的模型走得快时加快步频
     static M1CreatureAnimator Animate(GameObject root, string path, float height)
     {
-        var ad = root.AddComponent<M1CreatureAnimator>(); ad.bodySize = Mathf.Max(height, .5f); ad.hasRun = path != null && A.HasRunClip(path); return ad;
+        var ad = root.AddComponent<M1CreatureAnimator>(); ad.bodySize = Mathf.Max(height, .5f); ad.hasRun = path != null && A.HasRunClip(path); ad.attackHitDelay = HitDelay(path); return ad;
+    }
+    /// v0.8.3 攻击命中帧（秒），来自阶段 C 清单：伤害在这个时间点结算，和攻击动作对齐
+    static float HitDelay(string path)
+    {
+        string n = path == null ? "" : Path.GetFileNameWithoutExtension(path);
+        if (n.StartsWith("Pig_v083")) return .6f;             // 冲撞
+        if (n.StartsWith("RockTurtle")) return .4f;           // 伸颈咬
+        if (n.StartsWith("Mink") || n.StartsWith("Leopard") || n.StartsWith("Lynx")) return .45f; // 扑击挥爪
+        if (n.StartsWith("SpiritSparrow") || n.StartsWith("Vermilion") || n.StartsWith("Crane")) return .5f; // 俯冲啄击
+        if (n.StartsWith("Eagle_v083")) return .58f;
+        if (n.StartsWith("Butterfly")) return .33f;
+        return .25f;
     }
     /// 把模型挂到 root 下：统一高度、贴地、按物种调色、自动接上动画控制器
     static bool AttachModel(GameObject root, string path, float height, Color tint, string key, string displayName)
@@ -802,14 +814,14 @@ public static class M1WorldBuilderV077
                 SolidBody(go, h); if (kindName != "Slime" && kindName != "Skeleton") go.AddComponent<M1GroundAlign>();
             }
         }
-        string flyer = kind == 2 ? "Bat" : "Eagle"; string flyerName = kind == 2 ? "夜蝠" : "苍鹰";
+        string flyer = kind == 2 ? "Bat" : "Eagle"; string flyerName = kind == 2 ? "夜蝠" : "苍鹰"; string flyerPath = kind == 2 ? A.Creatures + "Bat.fbx" : A.V083 + "Eagle_v083.fbx"; // v0.8.3：苍鹰换成修正朝向的新版（原版是倒着飞的）
         for (int i = 0; i < 5; i++)
         {
             float x = R(-Edge * .7f, Edge * .7f), z = R(-Edge * .5f, Edge * .7f);
             var go = new GameObject(flyerName + " · 盘旋飞鸟"); go.transform.SetParent(root); go.transform.position = new Vector3(x, H(x, z), z);
             float h = flyer == "Bat" ? 1.2f : 1.5f;
-            if (!AttachModel(go, A.Creatures + flyer + ".fbx", h, Color.white, "ambient_" + flyer, flyerName)) { Object.DestroyImmediate(go); continue; }
-            Animate(go, A.Creatures + flyer + ".fbx", h); var c = go.AddComponent<M1AmbientCritter>(); c.mode = M1AmbientCritter.Mode.Circle; c.radius = R(14f, 30f); c.height = R(16f, 28f); c.speed = R(1.6f, 2.6f);
+            if (!AttachModel(go, flyerPath, h, Color.white, "ambient_" + flyer, flyerName)) { Object.DestroyImmediate(go); continue; }
+            Animate(go, flyerPath, h); var c = go.AddComponent<M1AmbientCritter>(); c.mode = M1AmbientCritter.Mode.Circle; c.radius = R(14f, 30f); c.height = R(16f, 28f); c.speed = R(1.6f, 2.6f);
         }
     }
     struct AmbientInfo { public string name, path; public float height; }
