@@ -110,7 +110,7 @@ tasks:
     branch: ""
     depends_on: []
     acceptance: 启动说明指向最新版本，并注明旧版本已归档
-    # 启动说明已更新（见 docs-fix 分支）；旧版本尚未归档，等用户确认
+    # 启动说明已合并到 main（c79be45）；旧 README 已移入外层目录 `_归档\`（用户确认）
     updated: 2026-10-20
 
   - id: T5.1
