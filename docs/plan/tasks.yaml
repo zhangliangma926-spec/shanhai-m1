@@ -149,7 +149,7 @@ tasks:
   - id: T7.1
     goal: G7
     title: 攻击不随镜头远近变化（瞄准射线跳过镜头与角色之间的物体、伙伴不挡枪、命中容差、法弹追踪）
-    status: in_progress
+    status: done
     owner: claude
     branch: feature/v0.8.1-combat
     depends_on: []
@@ -159,7 +159,7 @@ tasks:
   - id: T7.2
     goal: G7
     title: 战斗反馈（伤害飘字、命中弹动、守卫血条、可结契提示）
-    status: in_progress
+    status: done
     owner: claude
     branch: feature/v0.8.1-combat
     depends_on: []
@@ -169,7 +169,7 @@ tasks:
   - id: T7.3
     goal: G7
     title: 树石碰撞统一（树干实际位置、石头凸包碰撞、高植物加碰撞）
-    status: in_progress
+    status: done
     owner: claude
     branch: feature/v0.8.1-combat
     depends_on: []
@@ -179,7 +179,7 @@ tasks:
   - id: T7.4
     goal: G7
     title: 版本标识统一（窗口标题、BUILD_INFO、标题页）
-    status: in_progress
+    status: done
     owner: claude
     branch: feature/v0.8.1-combat
     depends_on: []
