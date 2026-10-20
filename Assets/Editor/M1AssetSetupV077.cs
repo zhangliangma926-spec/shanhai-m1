@@ -19,6 +19,8 @@ public static class M1AssetSetupV077
     public const string Characters = Root + "Characters/", Creatures = Root + "Creatures/", Nature = Root + "Nature/", Kenney = Root + "Kenney/", Textures = Root + "Textures/";
     // v0.8.0：Quaternius「Ultimate Animated Animals」（CC0），带 Walk / Gallop / Attack / HitReact 等完整动作
     public const string Animals = "Assets/Art/Models/v080/Animals/";
+    // v0.8.0：用 Blender 脚本绑骨、做动作的灵兽模型（岚角灵兽等）
+    public const string Beasts = "Assets/Art/Models/v080/Beasts/";
     const string MatDir = "Assets/Art/Materials/v0.7.7/", CtrlDir = "Assets/Art/Animators/v0.7.7/";
 
     static readonly string[] LoopKeys = { "idle", "walk", "run", "gallop", "fly", "swim", "jump", "eating" };
@@ -27,7 +29,7 @@ public static class M1AssetSetupV077
     // ---------- 1. 导入设置 ----------
     public static void ConfigureImports()
     {
-        foreach (var dir in new[] { Characters, Creatures, Animals })
+        foreach (var dir in new[] { Characters, Creatures, Animals, Beasts })
             foreach (var path in FbxIn(dir)) ConfigureAnimatedModel(path);
         ConfigureAnimatedModel("Assets/Art/Models/External_Quaternius/BlueDemon.fbx"); // 旧版的幽蓝翼兽，同为 Quaternius 模型
         foreach (var dir in new[] { Nature, Kenney })

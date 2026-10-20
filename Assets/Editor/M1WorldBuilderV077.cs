@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -20,7 +21,8 @@ public static class M1WorldBuilderV077
     const float Edge = Half - 24f;   // 可摆放区域边界（原先 296 = 320 - 24）
     const float Wall = Half - 20f;   // 隐形边界墙位置
     const float Dens = 1.5f;         // 景物数量倍率：800 米地图面积是 640 米的 1.56 倍，取 1.5 保持相近疏密
-    const string LanJiao = "Assets/Art/Models/Blender_Ready/LanJiao_SpiritBeast.fbx";
+    public const float RenderDistance = 100f; // v0.8.0：区块渲染距离（参考 MC），以角色为中心 100 米内的区块才显示
+    const string LanJiao = "Assets/Art/Models/v080/Beasts/LanJiao_SpiritBeast_Rigged.fbx"; // v0.8.0：Blender 绑骨版，带待机/走/跑/攻击/受击（原静态模型保留在 Blender_Ready）
     const string BlueDemon = "Assets/Art/Models/External_Quaternius/BlueDemon.fbx";
 
     static int kind; static System.Random rng;
@@ -144,21 +146,21 @@ public static class M1WorldBuilderV077
         new Species("blue_demon",     "岚角灵兽", LanJiao,                    1.7f, Color.white),
         new Species("spirit_beast",   "幽蓝翼兽", BlueDemon,                  1.9f, new Color(.55f,.82f,1f)),
         new Species("wind_fox",       "赤尾灵狐", A.Animals+"Fox.fbx",        .9f,  new Color(1f,.48f,.2f)),
-        new Species("stone_turtle",   "岩甲灵龟", null,                       1.2f, new Color(.42f,.56f,.44f)),
+        new Species("stone_turtle",   "岩甲灵龟", A.Beasts+"StoneTurtle_Rigged.fbx", 1.15f, Color.white),
         new Species("sky_bird",       "青羽灵雀", A.Creatures+"Eagle.fbx",    .85f, new Color(.35f,.85f,.95f), Flight.Perch),
-        new Species("ember_cat",      "赤焰山猫", A.Creatures+"Cat.fbx",      .85f, new Color(1f,.42f,.18f)),
+        new Species("ember_cat",      "赤焰山猫", A.Beasts+"Cat_v080.fbx",      .85f, new Color(1f,.42f,.18f)),
         new Species("mist_deer",      "雾角灵鹿", A.Animals+"Stag.fbx",       1.9f, new Color(.78f,.93f,.88f)),
-        new Species("rock_boar",      "玄岩獠猪", A.Creatures+"Pig.fbx",      1.05f,new Color(.45f,.38f,.34f)),
-        new Species("glass_marten",   "琉璃水貂", A.Creatures+"Cat.fbx",      .62f, new Color(.32f,.82f,.88f)),
+        new Species("rock_boar",      "玄岩獠猪", A.Beasts+"Pig_v080.fbx",      1.05f,new Color(.45f,.38f,.34f)),
+        new Species("glass_marten",   "琉璃水貂", A.Beasts+"Cat_v080.fbx",      .62f, new Color(.32f,.82f,.88f)),
         new Species("moon_moth",      "月羽灵蝶", A.Creatures+"Bat.fbx",      .9f,  new Color(.82f,.68f,1f),   Flight.Hover),
         new Species("six_eye_fox",    "六目灵狐", A.Animals+"Fox.fbx",        .85f, new Color(.98f,.68f,.26f)),
         new Species("seven_face_fox", "七面幻狐", A.Animals+"Fox.fbx",        1.0f, new Color(.66f,.46f,.88f)),
         new Species("red_xiao",       "赤霄朱雀", A.Creatures+"Eagle.fbx",    1.15f,new Color(1f,.28f,.14f),   Flight.Perch),
         new Species("qing_jiao",      "青蛟",     A.Creatures+"Dragon.fbx",   1.9f, new Color(.2f,.78f,.72f),  Flight.Hover),
         new Species("azure_crane",    "苍羽仙鹤", A.Creatures+"Eagle.fbx",    1.0f, new Color(.92f,.96f,1f),   Flight.Perch),
-        new Species("amber_leopard",  "琥珀雷豹", A.Creatures+"Cat.fbx",      1.15f,new Color(1f,.72f,.2f)),
+        new Species("amber_leopard",  "琥珀雷豹", A.Beasts+"Cat_v080.fbx",      1.15f,new Color(1f,.72f,.2f)),
         // v0.7.8 新增：同一批 CC0 模型换色、换体型得到的四种宠物
-        new Species("frost_wolf",     "霜牙灵狼", A.Creatures+"Wolf.fbx",     1.0f, new Color(.62f,.9f,1f)),
+        new Species("frost_wolf",     "霜牙灵狼", A.Beasts+"Wolf_v080.fbx",     1.0f, new Color(.62f,.9f,1f)),
         new Species("jade_ox",        "玉角灵牛", A.Creatures+"Cow.fbx",      1.45f,new Color(.72f,.92f,.78f)),
         new Species("flame_llama",    "焰驼",     A.Animals+"Alpaca.fbx",     1.45f,new Color(1f,.5f,.22f)),
         new Species("jade_hound",     "白玉灵犬", A.Animals+"Husky.fbx",      1.0f, new Color(.92f,1f,.96f)),
@@ -196,7 +198,7 @@ public static class M1WorldBuilderV077
         waterMat = Mat(new Color(.18f, .58f, .66f)); waterMat.SetFloat("_Glossiness", .9f); waterMat.EnableKeyword("_EMISSION"); waterMat.SetColor("_EmissionColor", new Color(.05f, .22f, .26f));
 
         BuildTerrain(worldName); BuildTrails(); if (k == 1) BuildStream();
-        ScatterNature(); DecorateTrails(); WorldDecor(); ExtraProps(); MakeSpring(); Boundary();
+        ScatterNature(); DecorateTrails(); WorldDecor(); ExtraProps(); MakeSpring(); MakeInfiniteWorld(); // v0.8.0：去掉隐形边界墙，改为无限区块地图
 
         var player = MakePlayer(); player.transform.position = new Vector3(0, 0, 0);
         var enemy = MakeEnemy(new Vector3(-9, H(-9, 16), 16));
@@ -208,7 +210,7 @@ public static class M1WorldBuilderV077
         foreach (var p in portals) MakePortal(p.scene, p.name, new Vector3(p.x, 0, 236f));
 
         var camObj = new GameObject("Main Camera"); camObj.tag = "MainCamera"; var cam = camObj.AddComponent<Camera>();
-        cam.fieldOfView = 58f; cam.nearClipPlane = .2f; cam.farClipPlane = 480f; camObj.AddComponent<AudioListener>();        camObj.transform.position = new Vector3(0, 4, -7);
+        cam.fieldOfView = 58f; cam.nearClipPlane = .2f; cam.farClipPlane = RenderDistance + 30f; camObj.AddComponent<AudioListener>(); camObj.transform.position = new Vector3(0, 4, -7); // v0.8.0：远裁剪面 = 区块渲染距离 + 30 米，远处由雾遮住
         var follow = camObj.AddComponent<M1CameraFollow>(); follow.target = player.transform; follow.distance = 7.4f; follow.minDistance = 3.2f; follow.maxDistance = 12f;
         player.GetComponent<M1PlayerController>().cameraTransform = camObj.transform;
         AddFireflies(new Vector3(0, 1.2f, 30), k == 2 ? 20 : 34);
@@ -224,7 +226,8 @@ public static class M1WorldBuilderV077
         RenderSettings.ambientEquatorColor = k == 2 ? new Color(.56f, .46f, .40f) : new Color(.46f, .56f, .48f);
         RenderSettings.ambientGroundColor = new Color(.24f, .23f, .21f);
         // v0.7.8 虚实：指数平方雾，近处清晰、远处逐渐发虚淡入天色，形成空气透视的纵深感
-        RenderSettings.fog = true; RenderSettings.fogMode = FogMode.ExponentialSquared;
+        // v0.8.0：改为线性雾，正好在区块渲染距离（100 米）处完全融入雾色，看不到区块边缘，类似 MC 的雾
+        RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear; RenderSettings.fogStartDistance = RenderDistance * .45f; RenderSettings.fogEndDistance = RenderDistance * 1.02f;
         RenderSettings.fogColor = k == 2 ? new Color(.82f, .72f, .66f) : k == 1 ? new Color(.62f, .78f, .78f) : new Color(.72f, .82f, .9f);
         RenderSettings.fogDensity = k == 1 ? .0042f : k == 2 ? .0036f : .0029f;
         RenderSettings.skybox = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Skybox.mat");
@@ -235,47 +238,14 @@ public static class M1WorldBuilderV077
 
     // ---------------- 地形 ----------------
     static float Smooth(float a, float b, float x) { float t = Mathf.Clamp01((x - a) / (b - a)); return t * t * (3f - 2f * t); }
-    public static float PathCenter(float z) => Mathf.Sin(z * .0115f + kind * 1.1f) * (kind == 2 ? 5f : 3f);
-    static float CrossZ(float x) => 120f + Mathf.Sin(x * .014f + kind) * 8f;
-    static float StreamZ(float x) => 62f + Mathf.Sin(x * .013f) * 12f;
-
+    // v0.8.0：高度、道路、颜色函数移到运行时的 M1TerrainNoise，编辑器生成的核心地形和运行时的无限区块共用同一套函数，接缝无缝
+    public static float PathCenter(float z) => M1TerrainNoise.PathCenter(kind, z);
+    static float CrossZ(float x) => M1TerrainNoise.CrossZ(kind, x);
+    static float StreamZ(float x) => M1TerrainNoise.StreamZ(x);
     /// 1 = 平地（主路、横路、营地、传送广场），0 = 自然起伏
-    static float Flat(float x, float z)
-    {
-        float dMain = (z > -95f && z < 250f) ? Mathf.Abs(x - PathCenter(z)) - 6f : 999f;
-        float dCross = Mathf.Abs(x) < 236f ? Mathf.Abs(z - CrossZ(x)) - 5f : 999f;
-        float dCamp = new Vector2(x, z - 30f).magnitude - 40f;
-        float dPlaza = new Vector2(x, z - 236f).magnitude - 22f;
-        float d = Mathf.Min(Mathf.Min(dMain, dCross), Mathf.Min(dCamp, dPlaza));
-        return 1f - Smooth(0f, 16f, d);
-    }
-    public static float H(float x, float z)
-    {
-        float flat = Flat(x, z);
-        float n = Mathf.PerlinNoise((x + kind * 31f + 500f) * .012f, (z - kind * 17f + 500f) * .012f);
-        float rolling = Mathf.Max(0f, n - .38f) * 8f;
-        float edge = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
-        float m = Smooth(Half * .58f, Half * .95f, edge);
-        float mn = Mathf.PerlinNoise((x + 157f + kind * 19f) * .03f, (z + 283f - kind * 11f) * .03f);
-        float mountain = m * (5f + mn * 18f + Mathf.Sin(x * .05f + kind) * 2f + Mathf.Cos(z * .043f) * 2f);
-        if (kind == 2) rolling *= 1.5f;
-        float h = (1f - flat) * (rolling + mountain);
-        if (kind == 1) { float ds = Mathf.Abs(z - StreamZ(x)); h -= (1f - Smooth(2f, 7f, ds)) * .6f * (1f - flat); }
-        return h;
-    }
-    static Color TerrainColor(float x, float z, float y)
-    {
-        float n = Mathf.PerlinNoise((x + 53f) * .05f, (z + 77f) * .05f);
-        Color low = kind == 2 ? new Color(.66f, .52f, .40f) : kind == 1 ? new Color(.36f, .58f, .34f) : new Color(.48f, .66f, .36f);
-        Color high = kind == 2 ? new Color(.74f, .58f, .46f) : new Color(.56f, .70f, .42f);
-        Color top = kind == 2 ? new Color(.64f, .6f, .56f) : new Color(.58f, .6f, .54f);
-        var c = Color.Lerp(low, high, n * .6f); c = Color.Lerp(c, top, Smooth(4f, 16f, y) * .85f);
-        // v0.7.9 草坪更有层次：大块色斑 + 细碎明暗，避免整片一个颜色
-        float patch = Mathf.PerlinNoise((x + 211f) * .011f, (z - 97f) * .011f), fine = Mathf.PerlinNoise(x * .21f, z * .21f);
-        c = Color.Lerp(c, c * new Color(1.08f, 1.12f, .92f), Smooth(.42f, .72f, patch) * .6f); c *= .9f + .18f * fine;
-        float f = Flat(x, z); if (f > .5f && (Mathf.Abs(x - PathCenter(z)) < 9f || Mathf.Abs(z - CrossZ(x)) < 8f)) c = Color.Lerp(c, kind == 2 ? new Color(.7f, .58f, .48f) : new Color(.62f, .6f, .44f), .35f);
-        return c;
-    }
+    static float Flat(float x, float z) => M1TerrainNoise.Flat(kind, x, z);
+    public static float H(float x, float z) => M1TerrainNoise.Height(kind, x, z);
+    static Color TerrainColor(float x, float z, float y) => M1TerrainNoise.GroundColor(kind, x, z, y);
     static void BuildTerrain(string worldName)
     {
         const int cells = 300; int side = cells + 1; var mesh = new Mesh { name = worldName + "_800m地形", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 }; // 361×361 顶点超过 16 位索引上限，必须用 32 位
@@ -285,7 +255,7 @@ public static class M1WorldBuilderV077
         int t = 0; for (int ix = 0; ix < cells; ix++) for (int iz = 0; iz < cells; iz++) { int a = ix * side + iz, b = (ix + 1) * side + iz, c = a + 1, d = b + 1; tri[t++] = a; tri[t++] = c; tri[t++] = b; tri[t++] = b; tri[t++] = c; tri[t++] = d; }
         mesh.vertices = v; mesh.colors = colors; mesh.uv = uv; mesh.triangles = tri; mesh.RecalculateNormals(); mesh.RecalculateBounds();
         string dir = "Assets/Art/Meshes/v0.7.7/"; Directory.CreateDirectory(dir); string mp = dir + "Terrain_" + kind + ".asset"; AssetDatabase.DeleteAsset(mp); AssetDatabase.CreateAsset(mesh, mp);
-        var root = new GameObject(worldName + " · 800米地形"); root.AddComponent<MeshFilter>().sharedMesh = mesh; root.AddComponent<MeshRenderer>().sharedMaterial = terrainMat; root.AddComponent<MeshCollider>().sharedMesh = mesh; root.isStatic = true;
+        var root = new GameObject(worldName + " · 800米地形"); root.AddComponent<MeshFilter>().sharedMesh = mesh; root.AddComponent<MeshRenderer>().sharedMaterial = terrainMat; root.AddComponent<MeshCollider>().sharedMesh = mesh; root.AddComponent<M1GroundSurface>(); root.isStatic = true;
     }
     static Material TerrainMaterial(int k)
     {
@@ -377,15 +347,7 @@ public static class M1WorldBuilderV077
         go.transform.SetParent(Group(cat), true);
         if (fr > 0f) Register(pos.x, pos.z, fr);
         A.ApplyTextures(go);
-        var rs = go.GetComponentsInChildren<Renderer>();
-        bool small = cat == Cat.Grass || cat == Cat.Flower || cat == Cat.Pebble || cat == Cat.Plant;
-        foreach (var r in rs) { r.shadowCastingMode = small ? UnityEngine.Rendering.ShadowCastingMode.Off : UnityEngine.Rendering.ShadowCastingMode.On; }
-        if (cat == Cat.Tree) { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Clamp(size * .035f, .22f, .6f) / s; c.height = size * .6f / s; c.center = new Vector3(b.center.x, b.min.y + size * .3f / s, b.center.z); }
-        else if (cat == Cat.Rock || cat == Cat.Big || cat == Cat.Prop) { var c = go.AddComponent<BoxCollider>(); c.center = b.center; c.size = b.size * .9f; }
-        else if (cat == Cat.Bush) // v0.8.0：灌木、灵竹也是实体，不能再直接穿过（草、花、小石子仍可踩过）
-        { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Min(b.size.x, b.size.z) * .32f; c.height = b.size.y * .85f; c.center = new Vector3(b.center.x, b.min.y + b.size.y * .45f, b.center.z); }
-        float cull = cat == Cat.Grass ? .03f : cat == Cat.Flower || cat == Cat.Pebble ? .025f : cat == Cat.Plant ? .018f : cat == Cat.Bush ? .012f : cat == Cat.Rock || cat == Cat.Prop ? .008f : .003f;
-        var lod = go.AddComponent<LODGroup>(); lod.SetLODs(new[] { new LOD(cull, rs) }); lod.RecalculateBounds();
+        FinishScenery(go, cat, b, size, s);
         GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
         return go;
     }
@@ -591,6 +553,54 @@ public static class M1WorldBuilderV077
         Prim(PrimitiveType.Cylinder, "中央灵泉 · 青玉环", new Vector3(0, .36f, 30f), new Vector3(2.4f, .12f, 2.4f), crystalMat, null);
         var l = new GameObject("灵泉光").AddComponent<Light>(); l.type = LightType.Point; l.color = new Color(.3f, .85f, 1f); l.intensity = 1.1f; l.range = 11f; l.transform.position = new Vector3(0, 1.2f, 30f);
     }
+    /// 阴影、碰撞体、远距离剔除（核心区摆放和无限区块模板共用）
+    static Renderer[] FinishScenery(GameObject go, Cat cat, Bounds b, float size, float s)
+    {
+        var rs = go.GetComponentsInChildren<Renderer>();
+        bool small = cat == Cat.Grass || cat == Cat.Flower || cat == Cat.Pebble || cat == Cat.Plant;
+        foreach (var r in rs) { r.shadowCastingMode = small ? UnityEngine.Rendering.ShadowCastingMode.Off : UnityEngine.Rendering.ShadowCastingMode.On; }
+        if (cat == Cat.Tree) { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Clamp(size * .035f, .22f, .6f) / s; c.height = size * .6f / s; c.center = new Vector3(b.center.x, b.min.y + size * .3f / s, b.center.z); }
+        else if (cat == Cat.Rock || cat == Cat.Big || cat == Cat.Prop) { var c = go.AddComponent<BoxCollider>(); c.center = b.center; c.size = b.size * .9f; }
+        else if (cat == Cat.Bush) // v0.8.0：灌木、灵竹也是实体，不能再直接穿过（草、花、小石子仍可踩过）
+        { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Min(b.size.x, b.size.z) * .32f; c.height = b.size.y * .85f; c.center = new Vector3(b.center.x, b.min.y + b.size.y * .45f, b.center.z); }
+        float cull = cat == Cat.Grass ? .03f : cat == Cat.Flower || cat == Cat.Pebble ? .025f : cat == Cat.Plant ? .018f : cat == Cat.Bush ? .012f : cat == Cat.Rock || cat == Cat.Prop ? .008f : .003f;
+        var lod = go.AddComponent<LODGroup>(); lod.SetLODs(new[] { new LOD(cull, rs) }); lod.RecalculateBounds();
+        return rs;
+    }
+
+    // ---------------- v0.8.0 无限区块地图（参考 MC） ----------------
+    // 核心区外的区块在运行时按种子生成；这里准备好各类景物的模板（已贴图、带碰撞、高度归一到典型尺寸），挂到 M1InfiniteWorld 上。
+    static void MakeInfiniteWorld()
+    {
+        var w = new GameObject("无限地图 · 区块管理").AddComponent<M1InfiniteWorld>();
+        w.kind = kind; w.seed = 770 + kind * 31; w.terrainMaterial = terrainMat; w.renderDistance = RenderDistance;
+        var root = new GameObject("区块景物模板（隐藏）"); root.SetActive(false);
+        GameObject[] T(IEnumerable<string> assets, Cat cat, float typical) => assets.Select(a => Template(a, cat, typical, root.transform)).Where(g => g).ToArray();
+        var trees = kind == 2 ? Dead.Concat(Twisted).Select(N) : kind == 1 ? Pines.Concat(CommonTrees).Select(N) : CommonTrees.Concat(Twisted).Select(N).Concat(FallTrees.Select(K));
+        w.treeTemplates = T(trees, Cat.Tree, kind == 1 ? 12f : kind == 2 ? 7f : 9f);
+        w.rockTemplates = T(kind == 2 ? Rocks.Select(N).Concat(new[] { K("rock_tall"), K("stone_tall") }) : Rocks.Select(N), Cat.Rock, 2f);
+        w.bushTemplates = T(Bushes.Select(N), Cat.Bush, 1.5f);
+        w.plantTemplates = T(kind == 1 ? Plants.Concat(Mushrooms).Select(N) : Plants.Select(N), Cat.Plant, 1f);
+        w.grassTemplates = T(Grasses.Select(N), Cat.Grass, .8f);
+        w.flowerTemplates = T(Flowers.Select(N), Cat.Flower, .45f);
+        // 尺寸倍率（相对模板的典型尺寸）
+        w.treeSize = new Vector2(.8f, 1.25f); w.rockSize = new Vector2(.6f, 1.5f); w.bushSize = new Vector2(.75f, 1.3f);
+        w.plantSize = new Vector2(.6f, 1.4f); w.grassSize = new Vector2(.7f, 1.4f); w.flowerSize = new Vector2(.7f, 1.4f);
+        // 每个 40 米区块的数量（树、石、灌木、植物、草簇、花），与核心区疏密相近
+        w.perChunk = kind == 1 ? new[] { new Vector2Int(5, 8), new Vector2Int(0, 2), new Vector2Int(1, 3), new Vector2Int(2, 5), new Vector2Int(2, 4), new Vector2Int(1, 3) }
+                   : kind == 2 ? new[] { new Vector2Int(1, 3), new Vector2Int(2, 4), new Vector2Int(0, 1), new Vector2Int(0, 1), new Vector2Int(0, 2), new Vector2Int(0, 1) }
+                   : new[] { new Vector2Int(3, 6), new Vector2Int(1, 2), new Vector2Int(1, 3), new Vector2Int(2, 4), new Vector2Int(2, 4), new Vector2Int(2, 3) };
+    }
+    static GameObject Template(string asset, Cat cat, float size, Transform parent)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(asset); if (!prefab) return null;
+        var holder = new GameObject("模板 · " + CatName(cat) + " · " + Path.GetFileNameWithoutExtension(asset)); holder.transform.SetParent(parent, false);
+        var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab); go.transform.SetParent(holder.transform, false);
+        var b = A.LocalBounds(prefab); float s = size / Mathf.Max(b.size.y, .01f);
+        go.transform.localScale = Vector3.one * s; go.transform.localPosition = -Vector3.up * (b.min.y * s + (cat == Cat.Rock || cat == Cat.Big ? size * .12f : 0f));
+        A.ApplyTextures(go); FinishScenery(go, cat, b, size, s);
+        return holder;
+    }
     static void Boundary()
     {
         var root = new GameObject("世界边界（隐形）");
@@ -669,7 +679,7 @@ public static class M1WorldBuilderV077
         if (sp.flight != Flight.None) { col.height = Mathf.Min(col.height, 1.4f); col.center = new Vector3(0, col.height * .5f, 0); } // 飞行类身体小，碰撞体随模型升空
         var actor = root.AddComponent<M1Actor>(); actor.isTameable = true; actor.displayName = sp.name; actor.speciesId = sp.id;
         root.AddComponent<M1SpiritBeastMotion>(); Animate(root, sp.model, sp.height);
-        if (sp.flight == Flight.None && ok && sp.id != "blue_demon" && sp.id != "spirit_beast") root.AddComponent<M1GroundAlign>(); // 四足动物随坡面倾斜；两足的岚角、翼兽保持直立
+        if (sp.flight == Flight.None && ok && sp.id != "spirit_beast") root.AddComponent<M1GroundAlign>(); // 四足动物随坡面倾斜；两足的幽蓝翼兽保持直立
         if (sp.flight != Flight.None)
         {
             var fly = root.AddComponent<M1FlyerMotion>();
@@ -691,11 +701,22 @@ public static class M1WorldBuilderV077
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path); if (!prefab) return false;
         var model = (GameObject)PrefabUtility.InstantiatePrefab(prefab); model.name = displayName + " · 模型（" + Path.GetFileNameWithoutExtension(path) + "）"; model.transform.SetParent(root.transform, false);
         var b = A.LocalBounds(prefab); float s = height / Mathf.Max(b.size.y, .01f);
-        model.transform.localScale = Vector3.one * s; model.transform.localPosition = new Vector3(-b.center.x * s, -b.min.y * s, -b.center.z * s);
+        var yaw = Quaternion.Euler(0f, ModelYaw(path), 0f); Vector3 c = yaw * b.center;
+        model.transform.localScale = Vector3.one * s; model.transform.localRotation = yaw; model.transform.localPosition = new Vector3(-c.x * s, -b.min.y * s, -c.z * s);
         A.ApplyTextures(model); A.Tint(model, key, tint);
         var ctrl = A.Controller(path, false);
         if (ctrl) { var anim = model.GetComponent<Animator>(); if (!anim) anim = model.AddComponent<Animator>(); anim.runtimeAnimatorController = ctrl; anim.applyRootMotion = false; }
         return true;
+    }
+    /// v0.8.0 朝向修正：游戏里“前方”是 +Z。逐个模型实测（头部、前腿骨骼相对包围盒的位置）：
+    /// 猫、狗、狼（Quaternius Animal Pack Vol.2）身体沿 X 轴、头朝 -X，之前一直侧着身子横着走；
+    /// 岚角灵兽、岩甲灵龟（Blender 正面朝 +Y 导出）头朝 -Z，之前是倒着走。
+    static float ModelYaw(string path)
+    {
+        string n = Path.GetFileNameWithoutExtension(path);
+        if (n.StartsWith("Cat") || n.StartsWith("Dog") || n.StartsWith("Wolf")) return 90f;
+        if (n.StartsWith("LanJiao") || n.StartsWith("StoneTurtle")) return 180f;
+        return 0f;
     }
     static void Turtle(Transform r, Color tint)
     {
@@ -749,7 +770,7 @@ public static class M1WorldBuilderV077
     {
         switch (model)
         {
-            case "Sheep": return new AmbientInfo { name = "绵羊", path = A.Creatures + "Sheep.fbx", height = 1.1f };
+            case "Sheep": return new AmbientInfo { name = "绵羊", path = A.Beasts + "Sheep_v080.fbx", height = 1.1f };
             case "Llama": return new AmbientInfo { name = "羊驼", path = A.Animals + "Alpaca.fbx", height = 1.6f };
             case "Horse": return new AmbientInfo { name = "骏马", path = A.Creatures + "Horse.fbx", height = 1.7f };
             case "ShibaInu": return new AmbientInfo { name = "柴犬", path = A.Animals + "ShibaInu.fbx", height = .65f };

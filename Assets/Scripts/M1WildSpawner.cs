@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public class M1WildSpawner : MonoBehaviour
 {
-    public float radius = 100f, minSpawnDistance = 30f, despawnDistance = 150f;
+    public float radius = 100f, minSpawnDistance = 30f, despawnDistance = 125f; // v0.8.0：与区块渲染距离（100 米）配合，超出视野后清除
     public float spawnInterval = 6f, spawnChance = .4f;
     public int maxSpawnedNearby = 6;
     const int RingSegments = 96;
@@ -84,6 +84,7 @@ public class M1WildSpawner : MonoBehaviour
 
     float GroundAt(float x, float z)
     {
+        var world = M1InfiniteWorld.Instance; if (world) return M1TerrainNoise.Height(world.kind, x, z); // v0.8.0：无限地图直接用地形函数算高度，区块未生成处也准确
         var down = new Ray(new Vector3(x, 400f, z), Vector3.down);
         foreach (var t in terrain)
             if (t && t.Raycast(down, out var hit, 800f)) return hit.point.y;
@@ -120,7 +121,7 @@ public class M1WildSpawner : MonoBehaviour
         {
             float a = Random.Range(0f, Mathf.PI * 2f), r = Random.Range(minSpawnDistance, radius);
             float x = p.x + Mathf.Sin(a) * r, z = p.z + Mathf.Cos(a) * r;
-            if (x < b.min.x + 10f || x > b.max.x - 10f || z < b.min.z + 10f || z > b.max.z - 10f) continue;
+            if (!M1InfiniteWorld.Instance && (x < b.min.x + 10f || x > b.max.x - 10f || z < b.min.z + 10f || z > b.max.z - 10f)) continue; // 无限地图不受 800 米边界限制
             if (IsCrowded(x, z) || Blocked(new Vector3(x, GroundAt(x, z), z))) continue;
 
             string species = speciesKeys[Random.Range(0, speciesKeys.Count)];
@@ -143,7 +144,7 @@ public class M1WildSpawner : MonoBehaviour
         for (int i = 0; i < n; i++)
         {
             var c = overlapBuf[i];
-            if (!c || (c is MeshCollider mc && System.Array.IndexOf(terrain, mc) >= 0)) continue;
+            if (!c || c.GetComponent<M1GroundSurface>() || (c is MeshCollider mc && System.Array.IndexOf(terrain, mc) >= 0)) continue; // 地面不算障碍
             return true;
         }
         return false;
