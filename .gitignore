@@ -1,0 +1,34 @@
+# Unity 生成的缓存与临时文件，不进入版本库
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+_Temp/
+_Cache/
+
+# 备份目录
+_Backup_*/
+
+# IDE 与系统文件
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.pidb
+*.booproj
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 打包产物（成品放在 05_成品交付，不进版本库）
+*.exe
+*.zip
+*.7z
