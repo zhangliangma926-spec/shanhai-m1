@@ -14,11 +14,12 @@ tasks:
   - id: T1.1
     goal: G1
     title: 在电脑上构建 v0.7.9 试玩版
-    status: needs_user
+    status: done
     owner: user
     branch: ""
     depends_on: []
     acceptance: 菜单构建成功，exe 能启动，Console 无红色报错
+    # Claude 用命令行构建成功并启动进入世界，记录见 04_验证记录/v0.7.9
     updated: 2026-10-20
 
   - id: T1.2
@@ -29,6 +30,7 @@ tasks:
     branch: ""
     depends_on: [T1.1]
     acceptance: 按 goals.md 中 G1 的四条验收标准逐条确认，结果记入 04_验证记录
+    # 数值已静态核对；刷新圈、采集还需手动试玩
     updated: 2026-10-20
 
   - id: T2.1
