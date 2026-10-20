@@ -105,8 +105,15 @@ public class M1Actor : MonoBehaviour
     public bool IsProvoked=>provoked;
     public void TakeDamage(float amount)
     {
-        if(tamed)return;if(isTameable)M1AudioDirector.PlayCreatureAction(speciesId,transform.position,.32f);health-=amount;if(isTameable)provoked=true;
+        if(tamed)return;if(isTameable)M1AudioDirector.PlayCreatureAction(speciesId,transform.position,.32f);
+        float before=health/Mathf.Max(1f,maxHealth);health-=amount;if(isTameable)provoked=true;
         if(animDriver)animDriver.Hit();
+        // v0.8.1 战斗反馈：伤害数字、模型弹一下；生命降到 10% 以下时明确提示“可结契”
+        var col=GetComponent<Collider>();Vector3 top=col?new Vector3(col.bounds.center.x,col.bounds.max.y+.3f,col.bounds.center.z):transform.position+Vector3.up*2f;
+        M1CombatFeedback.Popup(top,"-"+Mathf.Max(1,Mathf.RoundToInt(amount)),M1CombatFeedback.Damage);
+        if(transform.childCount>0)M1CombatFeedback.Punch(transform.GetChild(0));
+        float after=health/Mathf.Max(1f,maxHealth);
+        if(isTameable&&before>.10f&&after<=.10f&&health>0f){M1CombatFeedback.Popup(top+Vector3.up*.5f,"可结契！",M1CombatFeedback.Calm,28f);M1GameManager.Instance?.ShowAction(displayName+" 已虚弱，靠近后按 E 结契（需要灵契符）。");}
         if(body&&hasBodyColor){body.material.color=Color.Lerp(bodyColor,Color.white,.75f);CancelInvoke(nameof(RestoreColor));Invoke(nameof(RestoreColor),.12f);}
         if(health<=0f){M1GameManager.Instance?.ActorDefeated(this);gameObject.SetActive(false);}
     }

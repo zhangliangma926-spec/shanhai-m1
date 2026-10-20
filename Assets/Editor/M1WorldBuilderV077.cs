@@ -553,16 +553,52 @@ public static class M1WorldBuilderV077
         Prim(PrimitiveType.Cylinder, "中央灵泉 · 青玉环", new Vector3(0, .36f, 30f), new Vector3(2.4f, .12f, 2.4f), crystalMat, null);
         var l = new GameObject("灵泉光").AddComponent<Light>(); l.type = LightType.Point; l.color = new Color(.3f, .85f, 1f); l.intensity = 1.1f; l.range = 11f; l.transform.position = new Vector3(0, 1.2f, 30f);
     }
+    /// 树干位置与半径（模型本地坐标）：取底部 12% 高度内的顶点，算水平重心和平均半径
+    struct TrunkInfo { public float x, z, w; }
+    static readonly Dictionary<Mesh, TrunkInfo> trunkCache = new Dictionary<Mesh, TrunkInfo>(); // 同一模型只算一次（地图上有上千棵树）
+    static TrunkInfo Trunk(GameObject go, Bounds b)
+    {
+        var first = go.GetComponentInChildren<MeshFilter>(); var key = first ? first.sharedMesh : null;
+        if (key && trunkCache.TryGetValue(key, out var cached)) return cached;
+        var info = ComputeTrunk(go, b); if (key) trunkCache[key] = info; return info;
+    }
+    static TrunkInfo ComputeTrunk(GameObject go, Bounds b)
+    {
+        float limit = b.min.y + b.size.y * .12f; Vector3 sum = Vector3.zero; int n = 0; var pts = new List<Vector3>();
+        foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
+        {
+            var mesh = mf.sharedMesh; if (!mesh) continue;
+            var toRoot = go.transform.worldToLocalMatrix * mf.transform.localToWorldMatrix;
+            foreach (var v in mesh.vertices) { var p = toRoot.MultiplyPoint3x4(v); if (p.y <= limit) { sum += p; n++; pts.Add(p); } }
+        }
+        if (n < 3) return new TrunkInfo { x = b.center.x, z = b.center.z, w = Mathf.Min(b.size.x, b.size.z) * .08f };
+        float cx = sum.x / n, cz = sum.z / n, r = 0f; foreach (var p in pts) r += new Vector2(p.x - cx, p.z - cz).magnitude;
+        return new TrunkInfo { x = cx, z = cz, w = r / n * 1.1f };
+    }
+
     /// 阴影、碰撞体、远距离剔除（核心区摆放和无限区块模板共用）
     static Renderer[] FinishScenery(GameObject go, Cat cat, Bounds b, float size, float s)
     {
         var rs = go.GetComponentsInChildren<Renderer>();
         bool small = cat == Cat.Grass || cat == Cat.Flower || cat == Cat.Pebble || cat == Cat.Plant;
         foreach (var r in rs) { r.shadowCastingMode = small ? UnityEngine.Rendering.ShadowCastingMode.Off : UnityEngine.Rendering.ShadowCastingMode.On; }
-        if (cat == Cat.Tree) { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Clamp(size * .035f, .22f, .6f) / s; c.height = size * .6f / s; c.center = new Vector3(b.center.x, b.min.y + size * .3f / s, b.center.z); }
-        else if (cat == Cat.Rock || cat == Cat.Big || cat == Cat.Prop) { var c = go.AddComponent<BoxCollider>(); c.center = b.center; c.size = b.size * .9f; }
+        // v0.8.1 碰撞统一：木、石、建筑是实体，草、花、蘑菇、小石子可穿。
+        if (cat == Cat.Tree)
+        {
+            // 碰撞柱放在树干的实际位置（取模型底部 12% 高度内的顶点），之前放在整棵树包围盒中心，扭曲树、秋色树树冠偏一侧时会穿过树干、旁边却撞空气墙
+            var trunk = Trunk(go, b);
+            var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Clamp(trunk.w, .18f / s, .7f / s); c.height = size * .6f / s; c.center = new Vector3(trunk.x, b.min.y + size * .3f / s, trunk.z);
+        }
+        else if (cat == Cat.Rock || cat == Cat.Big)
+        {
+            // 石头、崖壁、石碑：贴合外形的凸包碰撞，之前的方盒在斜面石头上会出现空气墙或陷进去
+            foreach (var mf in go.GetComponentsInChildren<MeshFilter>()) { if (!mf.sharedMesh) continue; var mc = mf.gameObject.AddComponent<MeshCollider>(); mc.sharedMesh = mf.sharedMesh; mc.convex = true; }
+        }
+        else if (cat == Cat.Prop) { var c = go.AddComponent<BoxCollider>(); c.center = b.center; c.size = b.size * .9f; }
         else if (cat == Cat.Bush) // v0.8.0：灌木、灵竹也是实体，不能再直接穿过（草、花、小石子仍可踩过）
         { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Min(b.size.x, b.size.z) * .32f; c.height = b.size.y * .85f; c.center = new Vector3(b.center.x, b.min.y + b.size.y * .45f, b.center.z); }
+        else if (cat == Cat.Plant && size >= .9f) // v0.8.1：大蕨类等高植物也是实体
+        { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Min(b.size.x, b.size.z) * .2f; c.height = b.size.y * .8f; c.center = new Vector3(b.center.x, b.min.y + b.size.y * .4f, b.center.z); }
         float cull = cat == Cat.Grass ? .03f : cat == Cat.Flower || cat == Cat.Pebble ? .025f : cat == Cat.Plant ? .018f : cat == Cat.Bush ? .012f : cat == Cat.Rock || cat == Cat.Prop ? .008f : .003f;
         var lod = go.AddComponent<LODGroup>(); lod.SetLODs(new[] { new LOD(cull, rs) }); lod.RecalculateBounds();
         return rs;
@@ -801,10 +837,10 @@ public static class M1WorldBuilderV077
             var node = new GameObject(ore ? "青玉矿点" : "灵木采集点"); node.transform.SetParent(root); node.transform.position = new Vector3(x, H(x, z), z); Register(x, z, 6f); // 节点之间至少隔开约 7 米
             if (ore)
             {
-                var rock = Spawn(N(Pick(Rocks)), node.transform.position, R(1.4f, 2f), R(0, 360), "矿脉", Cat.Prop); if (rock) rock.transform.SetParent(node.transform, true);
+                var rock = Spawn(N(Pick(Rocks)), node.transform.position, R(1.4f, 2f), R(0, 360), "矿脉", Cat.Rock); if (rock) rock.transform.SetParent(node.transform, true); // v0.8.1：按石头处理（贴合外形的碰撞），不再是整块方盒
                 for (int s = 0; s < 3; s++) { var sh = Prim(PrimitiveType.Cube, "青玉晶尖", new Vector3(R(-.4f, .4f), R(1f, 1.6f), R(-.4f, .4f)), new Vector3(.22f, R(.6f, 1f), .22f), crystalMat, node.transform); sh.transform.localRotation = Quaternion.Euler(R(-20, 20), R(0, 360), R(-20, 20)); }
             }
-            else { var tree = Spawn(N(Pick(CommonTrees)), node.transform.position, R(4.5f, 6f), R(0, 360), "灵木", Cat.Prop); if (tree) tree.transform.SetParent(node.transform, true); Prim(PrimitiveType.Sphere, "灵木灵光", new Vector3(0, 1.2f, 0), Vector3.one * .3f, crystalMat, node.transform); }
+            else { var tree = Spawn(N(Pick(CommonTrees)), node.transform.position, R(4.5f, 6f), R(0, 360), "灵木", Cat.Tree); if (tree) tree.transform.SetParent(node.transform, true); Prim(PrimitiveType.Sphere, "灵木灵光", new Vector3(0, 1.2f, 0), Vector3.one * .3f, crystalMat, node.transform); } // v0.8.1：按树处理（碰撞柱在树干上），不再是罩住整个树冠的空气墙
             var col = node.AddComponent<BoxCollider>(); col.center = new Vector3(0, 1f, 0); col.size = new Vector3(1.6f, 2f, 1.6f);
             var h = node.AddComponent<M1HarvestNode>(); h.resource = ore ? "矿石" : "木材"; h.amount = 2; h.remaining = 4; h.player = player;
             Label(node.transform, ore ? "F · 青玉矿（镐 / 灵契符）" : "F · 灵木（斧 / 灵契符）", 3.2f);

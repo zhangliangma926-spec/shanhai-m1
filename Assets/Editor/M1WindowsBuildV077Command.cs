@@ -42,13 +42,14 @@ public static class M1WindowsBuildV077Command
         string exe = Path.Combine(dir, "Shanhai_M1.exe");
 
         EditorUtility.DisplayProgressBar("山海驭灵录 " + M1GameManager.Version, "编译 Windows 版本…（几分钟）", .45f);
+        PlayerSettings.productName = "山海驭灵录 M1 " + M1GameManager.Version; // v0.8.1：窗口标题与版本号一致（之前一直是 v0.6.6）
         try
         {
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes = scenes, locationPathName = exe, target = BuildTarget.StandaloneWindows64, options = BuildOptions.None });
             if (report.summary.result != BuildResult.Succeeded) throw new Exception("编译失败：" + report.summary.result + "（详见 Console）");
             File.WriteAllText(Path.Combine(dir, "aim-mode.txt"), "mouse\n");
             File.WriteAllText(Path.Combine(dir, "BUILD_INFO.txt"),
-                "M1 " + M1GameManager.Version + " · 800m 世界 · 刷新圈与采集 · 新动物模型与飞行动作\nBuilt: " + DateTime.Now + "\nAim: mouse (B)\nBuild size bytes: " + report.summary.totalSize + "\n" +
+                "M1 " + M1GameManager.Version + " · 无限区块地图 · 新动物模型与动作 · 战斗反馈与瞄准修正\nBuilt: " + DateTime.Now + "\nAim: mouse (B)\nBuild size bytes: " + report.summary.totalSize + "\n" +
                 "Assets: Quaternius (CC0), Kenney (CC0)\n");
         }
         finally { EditorUtility.ClearProgressBar(); }
