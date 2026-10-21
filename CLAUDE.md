@@ -72,6 +72,12 @@ v0.7.9 改动文件已经写入工程的 `Assets\Scripts` 和 `Assets\Editor`，
 - 其他：`Art\Materials`、`Art\Animators`、`Art\Textures`。
 - 素材来源：Quaternius（CC0）、Kenney（CC0）。
 
+### 模型存放规则（2026-10-20 起，长期有效）
+
+- 所有模型（现有的、以后新增或替换的）都复制一份到外层 `游戏素材\游戏模型\<类别>\`，类别为 主角 / 灵兽 / 敌人 / 氛围动物 / 场景\自然 / 场景\道具，贴图放 `贴图\`。工程里的原件不动。
+- 文件名 = 游戏里的名字 = 同名图片名，如 `灵兽\岚角灵兽.fbx` + `灵兽\岚角灵兽.png`。没有现成图片的用游戏里渲染的模型图。Blender 做或改过的同时放同名 `.blend`。
+- 加入或替换模型后运行 Unity 菜单 **Shanhai → Tools → 更新游戏模型库**（`Assets\Editor\M1ModelLibraryTool.cs`，命令行 `-executeMethod M1ModelLibraryTool.Run`），它会重拍图片、重写 `索引.tsv`、按中文名复制模型。新模型要在 `M1ModelLibraryTool.CnMap` 或世界生成脚本里有中文名。
+
 ## 已知问题与待确认事项
 
 - **灵兽数量（已核对）**：`M1SpeciesDatabase.cs` 中共 20 种，即 v0.7.5 的 16 种加上 v0.7.8 新增的 4 种。以 20 种为准，旧文档中的"16 种"已过时。
