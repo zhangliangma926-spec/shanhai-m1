@@ -45,6 +45,14 @@ public class M1CreatureAnimator : MonoBehaviour
 
     public void Attack() { if (HasAnimator) anim.SetTrigger(AttackId); }
     public void Hit() { if (HasAnimator) anim.SetTrigger(HitId); }
+    /// v0.8.4 死亡动作；控制器里没有死亡动作时返回 false（由 M1Actor 让模型侧倒）
+    public bool Die()
+    {
+        if (!HasAnimator) return false;
+        foreach (var p in anim.parameters) if (p.name == "Death") { anim.speed = 1f; anim.SetFloat(SpeedId, 0f); anim.SetTrigger("Death"); enabled = false; return true; }
+        anim.SetFloat(SpeedId, 0f); return false;
+    }
+    void OnEnable() { last = transform.position; }
     /// 触发一次性动作（TakeOff / Land 等）；控制器里没有这个参数时忽略
     public void Trigger(string name) { if (!HasAnimator) return; foreach (var p in anim.parameters) if (p.name == name && p.type == AnimatorControllerParameterType.Trigger) { anim.SetTrigger(name); return; } }
 }

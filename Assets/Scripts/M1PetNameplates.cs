@@ -17,7 +17,7 @@ public class M1PetNameplates : MonoBehaviour
         }
         foreach(var a in M1Actor.All)
         {
-            if(!a||(!a.isTameable&&!a.tamed&&!a.isEnemy)||!a.gameObject.activeInHierarchy)continue; // v0.8.1：营地守卫也显示名牌和血条
+            if(!a||(!a.isTameable&&!a.tamed&&!a.isEnemy&&!a.isWildlife)||a.IsDead||!a.gameObject.activeInHierarchy)continue; // v0.8.1：营地守卫也显示名牌和血条；v0.8.4：可猎杀的动物也显示
             float dist=Vector3.Distance(cam.transform.position,a.transform.position);if(dist>MaxDistance)continue;
             float top=a.transform.position.y+2.05f;if(!colliders.TryGetValue(a,out var col)){col=a.GetComponent<Collider>();colliders[a]=col;}if(col)top=Mathf.Max(top,col.bounds.max.y+.28f);
             Vector3 p=cam.WorldToScreenPoint(new Vector3(a.transform.position.x,top,a.transform.position.z));if(p.z<=0)continue;
@@ -26,7 +26,7 @@ public class M1PetNameplates : MonoBehaviour
             const float w=176f;float h=a.tamed?26f:(tameable?46f:34f);float x=p.x-w*.5f,y=Screen.height-p.y-h; // v0.8.2：加宽，名字和生命数值分开放
             var old=GUI.color;GUI.color=new Color(1,1,1,alpha);
             GUI.Box(new Rect(x,y,w,h),GUIContent.none);
-            nameStyle.normal.textColor=a.isEnemy?M1UISkin.Danger:a.tamed||tameable?M1UISkin.Jade:M1UISkin.Gold;
+            nameStyle.normal.textColor=a.isEnemy?M1UISkin.Danger:a.tamed||tameable?M1UISkin.Jade:a.isWildlife?new Color(.86f,.9f,.82f):M1UISkin.Gold;
             GUI.Label(new Rect(x+8,y+3,w-(a.tamed?16:62),20),a.displayName,nameStyle);
             if(!a.tamed)M1UISkin.Bar(new Rect(x+12,y+24,w-24,5),ratio,a.isEnemy?M1UISkin.Danger:tameable?M1UISkin.Jade:Color.Lerp(M1UISkin.Danger,M1UISkin.Gold,ratio));
             if(!a.tamed)GUI.Label(new Rect(x+w-52,y+4,44,18),Mathf.CeilToInt(a.health)+"",hpStyle??(hpStyle=new GUIStyle(M1UISkin.Small){alignment=TextAnchor.MiddleRight})); // 生命数值靠右，不压住名字

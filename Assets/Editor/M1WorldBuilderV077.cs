@@ -128,7 +128,7 @@ public static class M1WorldBuilderV077
         x = ((x % cells) + cells) % cells; y = ((y % cells) + cells) % cells;
         return Mathf.Repeat(Mathf.Sin(x * 127.1f + y * 311.7f) * 43758.5453f, 1f);
     }
-    static Material terrainMat, pathMat, waterMat, crystalMat, gateMat, accentMat, stoneMat, shellMat, shellDark, eyeMat;
+    static Material terrainMat, pathMat, waterMat, crystalMat, jadeMat, gateMat, accentMat, stoneMat, shellMat, shellDark, eyeMat;
     static readonly Dictionary<string, Transform> groups = new Dictionary<string, Transform>();
 
     enum Cat { Tree, Bush, Plant, Grass, Flower, Rock, Pebble, Big, Prop }
@@ -161,7 +161,7 @@ public static class M1WorldBuilderV077
         new Species("amber_leopard",  "琥珀雷豹", A.V083+"Leopard_v083.fbx",  1.15f,new Color(1f,.72f,.2f)),
         // v0.7.8 新增：同一批 CC0 模型换色、换体型得到的四种宠物
         new Species("frost_wolf",     "霜牙灵狼", A.Beasts+"Wolf_v080.fbx",     1.0f, new Color(.62f,.9f,1f)),
-        new Species("jade_ox",        "玉角灵牛", A.Creatures+"Cow.fbx",      1.45f,new Color(.72f,.92f,.78f)),
+        new Species("jade_ox",        "玉角灵牛", A.V084+"Cow_v084.fbx",     1.45f,new Color(.72f,.92f,.78f)),
         new Species("flame_llama",    "焰驼",     A.Animals+"Alpaca.fbx",     1.45f,new Color(1f,.5f,.22f)),
         new Species("jade_hound",     "白玉灵犬", A.Animals+"Husky.fbx",      1.0f, new Color(.92f,1f,.96f)),
     };
@@ -173,7 +173,7 @@ public static class M1WorldBuilderV077
         A.ConfigureImports();
         Directory.CreateDirectory(SceneDir);
         foreach (var p in new[] { Hub, Forest, Canyon }) if (File.Exists(p)) AssetDatabase.DeleteAsset(p); // v0.7.7 场景可重复生成
-        stoneMat = Mat(new Color(.46f, .48f, .47f)); crystalMat = Glow(new Color(.32f, .9f, 1f), 2.2f); gateMat = Glow(new Color(.18f, .6f, .75f), 1.2f);
+        stoneMat = Mat(new Color(.46f, .48f, .47f)); crystalMat = Glow(new Color(.32f, .9f, 1f), 2.2f); jadeMat = Glow(new Color(.2f, .66f, .52f), .45f); // v0.8.4：青玉矿的晶尖用玉绿色、弱发光，之前用灯芯同款强发光，整块曝成白色 gateMat = Glow(new Color(.18f, .6f, .75f), 1.2f);
         accentMat = Mat(new Color(.86f, .62f, .24f)); shellMat = Mat(new Color(.42f, .56f, .44f)); shellDark = Mat(new Color(.24f, .33f, .26f)); eyeMat = Mat(new Color(.05f, .06f, .07f));
         MakeWorld(Hub, "星金营地", 0, new[] { new PortalTo(Forest, "青岚灵林", -12f), new PortalTo(Canyon, "玄岩谷地", 12f) });
         MakeWorld(Forest, "青岚灵林", 1, new[] { new PortalTo(Hub, "星金营地", -12f), new PortalTo(Canyon, "玄岩谷地", 12f) });
@@ -503,7 +503,7 @@ public static class M1WorldBuilderV077
             for (int i = 0; i < 70; i++) { float x = R(-Edge, Edge), z = R(-Edge, Edge); if (!Open(x, z, .2f) || Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) < 120f) continue; Spawn(K(rng.NextDouble() < .6 ? "cliff_large_rock" : "cliff_block_rock"), new Vector3(x, H(x, z), z), R(6f, 14f), R(0, 360), "玄岩崖壁", Cat.Big); }
             for (int i = 0; i < 12; i++) { float x = R(-Edge * .85f, Edge * .85f), z = R(-Edge * .85f, Edge * .85f); if (!Open(x, z, .3f)) continue; Spawn(K(rng.NextDouble() < .5 ? "statue_ring" : "statue_obelisk"), new Vector3(x, H(x, z), z), R(4f, 7f), R(0, 360), "上古石刻", Cat.Big); }
             for (int i = 0; i < 26; i++)
-            { float x = R(-30, 30), z = R(20, 60); if (Flat(x, z) > .9f && new Vector2(x, z - 30f).magnitude < 12f) continue; var shard = Prim(PrimitiveType.Cube, "玄岩谷青玉晶脉", new Vector3(x, H(x, z) + 1.2f, z), new Vector3(.45f, R(1.5f, 3.2f), .45f), crystalMat, Group(Cat.Prop), true); shard.transform.rotation = Quaternion.Euler(R(-12, 12), R(0, 360), R(-12, 12)); }
+            { float x = R(-30, 30), z = R(20, 60); if (Flat(x, z) > .9f && new Vector2(x, z - 30f).magnitude < 12f) continue; var shard = Prim(PrimitiveType.Cube, "玄岩谷青玉晶脉", new Vector3(x, H(x, z) + 1.2f, z), new Vector3(.45f, R(1.5f, 3.2f), .45f), jadeMat, Group(Cat.Prop), true); shard.transform.rotation = Quaternion.Euler(R(-12, 12), R(0, 360), R(-12, 12)); }
         }
     }
     /// v0.7.8 道具：每个世界的探索地标（灵石祭坛 / 灵石丛 / 古碑阵），让地图上有更多可看、可绕的目标
@@ -606,10 +606,8 @@ public static class M1WorldBuilderV077
             foreach (var mf in go.GetComponentsInChildren<MeshFilter>()) { if (!mf.sharedMesh) continue; var mc = mf.gameObject.AddComponent<MeshCollider>(); mc.sharedMesh = mf.sharedMesh; mc.convex = true; }
         }
         else if (cat == Cat.Prop) { var c = go.AddComponent<BoxCollider>(); c.center = b.center; c.size = b.size * .9f; }
-        else if (cat == Cat.Bush) // v0.8.0：灌木、灵竹也是实体，不能再直接穿过（草、花、小石子仍可踩过）
+        else if (cat == Cat.Bush && go.name.StartsWith("灵竹")) // v0.8.4 碰撞规则：灵竹算木头，是实体；灌木、蕨类、高植物都能穿过
         { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Min(b.size.x, b.size.z) * .32f; c.height = b.size.y * .85f; c.center = new Vector3(b.center.x, b.min.y + b.size.y * .45f, b.center.z); }
-        else if (cat == Cat.Plant && size >= .9f) // v0.8.1：大蕨类等高植物也是实体
-        { var c = go.AddComponent<CapsuleCollider>(); c.radius = Mathf.Min(b.size.x, b.size.z) * .2f; c.height = b.size.y * .8f; c.center = new Vector3(b.center.x, b.min.y + b.size.y * .4f, b.center.z); }
         float cull = cat == Cat.Grass ? .03f : cat == Cat.Flower || cat == Cat.Pebble ? .025f : cat == Cat.Plant ? .018f : cat == Cat.Bush ? .012f : cat == Cat.Rock || cat == Cat.Prop ? .008f : .003f;
         var lod = go.AddComponent<LODGroup>(); lod.SetLODs(new[] { new LOD(cull, rs) }); lod.RecalculateBounds();
         return rs;
@@ -752,6 +750,7 @@ public static class M1WorldBuilderV077
         if (n.StartsWith("SpiritSparrow") || n.StartsWith("Vermilion") || n.StartsWith("Crane")) return .5f; // 俯冲啄击
         if (n.StartsWith("Eagle_v083")) return .58f;
         if (n.StartsWith("Butterfly")) return .33f;
+        if (n.EndsWith("_v084")) return .46f;                 // v0.8.4 蹄类：后踢 / 冲顶，第 11 帧命中
         return .25f;
     }
     /// 把模型挂到 root 下：统一高度、贴地、按物种调色、自动接上动画控制器
@@ -812,6 +811,7 @@ public static class M1WorldBuilderV077
                 if (!AttachModel(go, info.path, h, tint, "ambient_" + kindName + kind, info.name)) { Object.DestroyImmediate(go); continue; }
                 Animate(go, info.path, h); var c = go.AddComponent<M1AmbientCritter>(); c.radius = 9f; c.speed = kindName == "Slime" ? .7f : 1.1f;
                 SolidBody(go, h); if (kindName != "Slime" && kindName != "Skeleton") go.AddComponent<M1GroundAlign>();
+                LifeActor(go, info, h);
             }
         }
         string flyer = kind == 2 ? "Bat" : "Eagle"; string flyerName = kind == 2 ? "夜蝠" : "苍鹰"; string flyerPath = kind == 2 ? A.Creatures + "Bat.fbx" : A.V083 + "Eagle_v083.fbx"; // v0.8.3：苍鹰换成修正朝向的新版（原版是倒着飞的）
@@ -821,23 +821,34 @@ public static class M1WorldBuilderV077
             var go = new GameObject(flyerName + " · 盘旋飞鸟"); go.transform.SetParent(root); go.transform.position = new Vector3(x, H(x, z), z);
             float h = flyer == "Bat" ? 1.2f : 1.5f;
             if (!AttachModel(go, flyerPath, h, Color.white, "ambient_" + flyer, flyerName)) { Object.DestroyImmediate(go); continue; }
-            Animate(go, flyerPath, h); var c = go.AddComponent<M1AmbientCritter>(); c.mode = M1AmbientCritter.Mode.Circle; c.radius = R(14f, 30f); c.height = R(16f, 28f); c.speed = R(1.6f, 2.6f);
+            Animate(go, flyerPath, h); var c = go.AddComponent<M1AmbientCritter>(); c.mode = M1AmbientCritter.Mode.Circle; c.radius = R(12f, 24f); c.height = R(9f, 15f); c.speed = R(1.6f, 2.6f); // v0.8.4：飞低一些，能被射中
+            go.transform.position += Vector3.up * c.height; // 一开始就在空中（远处的飞鸟不更新，之前会停在地上）
+            SolidBody(go, h);
+            LifeActor(go, new AmbientInfo { name = flyerName, id = flyer, hp = flyer == "Bat" ? 30f : 45f, hostile = true }, h).selfMoving = true;
         }
     }
-    struct AmbientInfo { public string name, path; public float height; }
+    /// v0.8.4 氛围动物也有名字、血量，能被打死：家畜和野兽是可猎杀动物（挨打逃跑），斑马 / 骸骨 / 灵胶 / 飞鸟是怪物（红名）
+    static M1Actor LifeActor(GameObject go, AmbientInfo info, float h)
+    {
+        var a = go.AddComponent<M1Actor>(); a.displayName = info.name; a.speciesId = "ambient_" + info.id; a.maxHealth = a.health = info.hp;
+        if (info.hostile) { a.isEnemy = true; a.aggressive = info.aggressive; a.attackDamage = info.damage; a.aggroRange = info.aggro; }
+        else { a.isWildlife = true; a.fleeSpeed = Mathf.Clamp(h * 2.2f, 2.6f, 4.6f); }
+        return a;
+    }
+    struct AmbientInfo { public string name, path, id; public float height, hp, damage, aggro; public bool hostile, aggressive; }
     static AmbientInfo Ambient(string model)
     {
         switch (model)
         {
-            case "Sheep": return new AmbientInfo { name = "绵羊", path = A.Beasts + "Sheep_v080.fbx", height = 1.1f };
-            case "Llama": return new AmbientInfo { name = "羊驼", path = A.Animals + "Alpaca.fbx", height = 1.6f };
-            case "Horse": return new AmbientInfo { name = "骏马", path = A.Creatures + "Horse.fbx", height = 1.7f };
-            case "ShibaInu": return new AmbientInfo { name = "柴犬", path = A.Animals + "ShibaInu.fbx", height = .65f };
-            case "Deer": return new AmbientInfo { name = "林鹿", path = A.Animals + "Deer.fbx", height = 1.5f };
-            case "Slime": return new AmbientInfo { name = "灵胶", path = A.Creatures + "Slime.fbx", height = .6f };
-            case "Zebra": return new AmbientInfo { name = "斑马", path = A.Creatures + "Zebra.fbx", height = 1.7f };
-            case "Skeleton": return new AmbientInfo { name = "游荡骸骨", path = A.Creatures + "Skeleton.fbx", height = 1.7f };
-            default: return new AmbientInfo { name = model, path = A.Creatures + model + ".fbx", height = 1.2f };
+            case "Sheep": return new AmbientInfo { name = "绵羊", id = model, path = A.V084 + "Sheep_v084.fbx", height = 1.1f, hp = 45f };
+            case "Llama": return new AmbientInfo { name = "羊驼", id = model, path = A.Animals + "Alpaca.fbx", height = 1.6f, hp = 60f };
+            case "Horse": return new AmbientInfo { name = "骏马", id = model, path = A.V084 + "Horse_v084.fbx", height = 1.7f, hp = 80f };
+            case "ShibaInu": return new AmbientInfo { name = "柴犬", id = model, path = A.Animals + "ShibaInu.fbx", height = .65f, hp = 35f };
+            case "Deer": return new AmbientInfo { name = "林鹿", id = model, path = A.Animals + "Deer.fbx", height = 1.5f, hp = 55f };
+            case "Slime": return new AmbientInfo { name = "灵胶", id = model, path = A.Creatures + "Slime.fbx", height = .6f, hp = 40f, hostile = true, aggressive = true, damage = 4f, aggro = 8f };
+            case "Zebra": return new AmbientInfo { name = "斑马", id = model, path = A.V084 + "Zebra_v084.fbx", height = 1.7f, hp = 90f, hostile = true, aggressive = false, damage = 7f, aggro = 13f }; // 挨打才反击
+            case "Skeleton": return new AmbientInfo { name = "游荡骸骨", id = model, path = A.Creatures + "Skeleton.fbx", height = 1.7f, hp = 85f, hostile = true, aggressive = true, damage = 6f, aggro = 10f };
+            default: return new AmbientInfo { name = model, id = model, path = A.Creatures + model + ".fbx", height = 1.2f, hp = 50f };
         }
     }
     /// 会移动的氛围动物：胶囊碰撞体 + 运动学刚体，玩家撞上会被挡住，不会穿模
@@ -861,7 +872,7 @@ public static class M1WorldBuilderV077
             if (ore)
             {
                 var rock = Spawn(N(Pick(Rocks)), node.transform.position, R(1.4f, 2f), R(0, 360), "矿脉", Cat.Rock); if (rock) rock.transform.SetParent(node.transform, true); // v0.8.1：按石头处理（贴合外形的碰撞），不再是整块方盒
-                for (int s = 0; s < 3; s++) { var sh = Prim(PrimitiveType.Cube, "青玉晶尖", new Vector3(R(-.4f, .4f), R(1f, 1.6f), R(-.4f, .4f)), new Vector3(.22f, R(.6f, 1f), .22f), crystalMat, node.transform); sh.transform.localRotation = Quaternion.Euler(R(-20, 20), R(0, 360), R(-20, 20)); }
+                for (int s = 0; s < 3; s++) { var sh = Prim(PrimitiveType.Cube, "青玉晶尖", new Vector3(R(-.4f, .4f), R(1f, 1.6f), R(-.4f, .4f)), new Vector3(.22f, R(.6f, 1f), .22f), jadeMat, node.transform); sh.transform.localRotation = Quaternion.Euler(R(-20, 20), R(0, 360), R(-20, 20)); }
             }
             else { var tree = Spawn(N(Pick(CommonTrees)), node.transform.position, R(4.5f, 6f), R(0, 360), "灵木", Cat.Tree); if (tree) tree.transform.SetParent(node.transform, true); Prim(PrimitiveType.Sphere, "灵木灵光", new Vector3(0, 1.2f, 0), Vector3.one * .3f, crystalMat, node.transform); } // v0.8.1：按树处理（碰撞柱在树干上），不再是罩住整个树冠的空气墙
             var col = node.AddComponent<BoxCollider>(); col.center = new Vector3(0, 1f, 0); col.size = new Vector3(1.6f, 2f, 1.6f);

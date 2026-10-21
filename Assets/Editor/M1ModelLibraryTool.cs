@@ -20,13 +20,14 @@ public static class M1ModelLibraryTool
         foreach (var scene in new[] { M1WorldBuilderV077.Hub, M1WorldBuilderV077.Forest, M1WorldBuilderV077.Canyon })
         {
             EditorSceneManager.OpenScene(scene);
-            foreach (var a in Object.FindObjectsByType<M1Actor>(FindObjectsSortMode.None))
+            foreach (var a in Object.FindObjectsByType<M1Actor>())
             {
+                if (a.GetComponent<M1AmbientCritter>()) continue; // 氛围动物（v0.8.4 起也带 M1Actor）在下面单独归类
                 string cat = a.GetComponent<M1PlayerController>() ? "主角" : a.isEnemy ? "敌人" : a.isTameable ? "灵兽" : null; if (cat == null) continue;
                 string name = cat == "敌人" ? "星金营地守卫" : a.displayName;
                 Shoot(cat, name, a.transform, a.GetComponent<M1FlyerMotion>() ? "Flying" : "Idle");
             }
-            foreach (var c in Object.FindObjectsByType<M1AmbientCritter>(FindObjectsSortMode.None))
+            foreach (var c in Object.FindObjectsByType<M1AmbientCritter>())
                 Shoot("氛围动物", c.name.Split('·')[0].Trim(), c.transform, c.mode == M1AmbientCritter.Mode.Circle ? "Flying" : "Idle");
             // 场景物件：每个模型文件单独摆一份渲染
             if (scene == M1WorldBuilderV077.Hub)
@@ -57,7 +58,7 @@ public static class M1ModelLibraryTool
         foreach (var t in Directory.GetFiles(Path.Combine(project, A.Textures.Replace('/', Path.DirectorySeparatorChar)), "*.png")) File.Copy(t, Path.Combine(tex, Path.GetFileName(t)), true);
     }
 
-    static string SourceOf(Transform root)
+    internal static string SourceOf(Transform root)
     {
         foreach (var t in root.GetComponentsInChildren<Transform>(true))
         {
@@ -94,7 +95,8 @@ public static class M1ModelLibraryTool
         Object.DestroyImmediate(go);
     }
 
-    static void Render(GameObject go, string file, Vector3 fwd, Vector3 right)
+    internal static void Render(GameObject go, string file, Vector3 fwd, Vector3 right) => RenderDir(go, file, (fwd.normalized * .75f + right.normalized * .55f + Vector3.up * .35f).normalized); // 侧前方 3/4 视角，能看到脸
+    internal static void RenderDir(GameObject go, string file, Vector3 dir)
     {
         foreach (var t in go.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = Layer;
         var rs = go.GetComponentsInChildren<Renderer>(); if (rs.Length == 0) return;
@@ -102,7 +104,6 @@ public static class M1ModelLibraryTool
         var camGo = new GameObject("TmpCam"); var cam = camGo.AddComponent<Camera>();
         cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.80f, .84f, .86f); cam.cullingMask = 1 << Layer; cam.fieldOfView = 30f; cam.nearClipPlane = .01f; cam.farClipPlane = 1000f;
         float size = Mathf.Max(b.size.magnitude, .1f);
-        var dir = (fwd.normalized * .75f + right.normalized * .55f + Vector3.up * .35f).normalized; // 侧前方 3/4 视角，能看到脸
         camGo.transform.position = b.center + dir * size * 1.9f; camGo.transform.LookAt(b.center);
         var lightGo = new GameObject("TmpLight"); var l = lightGo.AddComponent<Light>(); l.type = LightType.Directional; l.intensity = .9f; l.cullingMask = 1 << Layer; lightGo.transform.rotation = Quaternion.LookRotation(-dir + Vector3.down * .6f);
         var rt = new RenderTexture(768, 768, 24) { antiAliasing = 4 }; cam.targetTexture = rt; cam.Render();
@@ -111,7 +112,7 @@ public static class M1ModelLibraryTool
         RenderTexture.active = null; cam.targetTexture = null; Object.DestroyImmediate(rt); Object.DestroyImmediate(tex); Object.DestroyImmediate(camGo); Object.DestroyImmediate(lightGo);
     }
 
-    static string Short(string n) { int i = n.LastIndexOf('|'); return i >= 0 ? n.Substring(i + 1) : n; }
+    internal static string Short(string n) { int i = n.LastIndexOf('|'); return i >= 0 ? n.Substring(i + 1) : n; }
 
     // 场景物件的中文名（带编号的保留编号）
     static readonly Dictionary<string, string> CnMap = new Dictionary<string, string>

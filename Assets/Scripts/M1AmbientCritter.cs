@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// 地图氛围生物（v0.7.7）：牧群在出生点附近慢慢游荡，飞鸟在高空盘旋。
-/// 不可攻击、不可结契，只为让世界更有生气；离玩家太远时暂停更新。
+/// 地图氛围生物（v0.7.7）：牧群在出生点附近慢慢游荡，飞鸟在高空盘旋。离玩家太远时暂停更新。
+/// v0.8.4：同一物体上还有 M1Actor（可猎杀动物或怪物），有名牌血条、能被打死；不可结契。
 /// </summary>
 public class M1AmbientCritter : MonoBehaviour
 {
@@ -12,10 +12,14 @@ public class M1AmbientCritter : MonoBehaviour
     Vector3 home, target; float timer, angle;
     static readonly RaycastHit[] groundHits = new RaycastHit[6];
 
-    void Start() { home = transform.position; target = home; angle = Random.value * 360f; timer = Random.Range(0f, 4f); }
+    M1Actor actor;
+    void Start() { home = transform.position; if (mode == Mode.Circle) home.y -= height; target = home; angle = Random.value * 360f; timer = Random.Range(0f, 4f); actor = GetComponent<M1Actor>(); } // v0.8.4：飞鸟出生就在空中，家点取地面
+    /// v0.8.4：被打死后在别处重新出现（M1Actor 发来的消息），以新位置为家
+    void OnRespawned(Vector3 at) { home = at; target = at; }
 
     void Update()
     {
+        if (actor && (actor.Engaged || actor.IsDead)) return; // v0.8.4：追击、逃跑、死亡时由 M1Actor 控制
         var gm = M1GameManager.Instance;
         if (gm && gm.player && (transform.position - gm.player.transform.position).sqrMagnitude > 140f * 140f) return;
         float dt = Time.deltaTime;

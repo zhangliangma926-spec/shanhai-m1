@@ -9,7 +9,7 @@ public class M1SpellProjectile : MonoBehaviour
     static readonly RaycastHit[] aimHits=new RaycastHit[32];
     sealed class HitComparer:System.Collections.Generic.IComparer<RaycastHit>{public int Compare(RaycastHit a,RaycastHit b)=>a.distance.CompareTo(b.distance);}
     static readonly HitComparer Comparer=new HitComparer();
-    static bool Hostile(M1Actor a)=>a&&!a.tamed&&(a.isEnemy||a.isTameable)&&a.gameObject.activeInHierarchy;
+    static bool Hostile(M1Actor a)=>a&&!a.tamed&&!a.IsDead&&(a.isEnemy||a.isTameable||a.isWildlife)&&a.gameObject.activeInHierarchy;
 
     /// v0.8.1 瞄准：射线仍从镜头穿过准星，但
     /// 1) 跳过镜头和角色之间的东西（之前镜头拉远时，身后的宠物、灌木、树会先被射中，所以远近效果不一样）；
@@ -69,7 +69,7 @@ public class M1SpellProjectile : MonoBehaviour
         transform.position=Vector3.MoveTowards(transform.position,destination,speed*Time.deltaTime);transform.Rotate(0,660f*Time.deltaTime,0);
         if(Vector3.Distance(transform.position,destination)<.18f)
         {
-            if(target&&target.gameObject.activeInHierarchy){float applied=damage;if(target.isTameable)applied=Mathf.Min(applied,Mathf.Max(0f,target.health-1f));if(applied>0f)target.TakeDamage(applied);else M1CombatFeedback.Popup(destination,"已虚弱",M1CombatFeedback.Calm);M1AudioDirector.PlayUI("hit");}
+            if(target&&target.gameObject.activeInHierarchy&&!target.IsDead){target.TakeDamage(damage);M1AudioDirector.PlayUI("hit");} // v0.8.4：去掉“至少保留 1 点生命”，灵兽和动物都能被打死
             Impact(destination,tint);Destroy(gameObject);
         }
     }

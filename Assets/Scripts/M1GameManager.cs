@@ -67,13 +67,19 @@ public class M1GameManager : MonoBehaviour
         var ring=GameObject.CreatePrimitive(PrimitiveType.Sphere);ring.name="灵纹效果";ring.transform.position=at;ring.transform.localScale=Vector3.one*.65f;
         var c=ring.GetComponent<Collider>();if(c)Destroy(c);var r=ring.GetComponent<Renderer>();r.material=new Material(Shader.Find("Standard"));r.material.color=new Color(.15f,.9f,.85f,.7f);r.material.SetFloat("_Mode",3);r.material.SetInt("_SrcBlend",(int)UnityEngine.Rendering.BlendMode.SrcAlpha);r.material.SetInt("_DstBlend",(int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);r.material.SetInt("_ZWrite",0);r.material.DisableKeyword("_ALPHATEST_ON");r.material.EnableKeyword("_ALPHABLEND_ON");r.material.renderQueue=3000;Destroy(ring,.55f);
     }
-    public void ActorDefeated(M1Actor actor){if(actor==enemy)ShowAction("测试敌人已击败！");else if(actor&&actor.isTameable)ShowAction(actor.displayName+" 失去意识；本轮无法再结契。");}
+    public void ActorDefeated(M1Actor actor)
+    {
+        if(!actor)return;string back=actor.respawnSeconds>0f?"，"+Mathf.RoundToInt(actor.respawnSeconds/60f)+" 分钟后会在别处重新出现":"";
+        if(actor==enemy)ShowAction("营地守卫已击败"+back+"。");
+        else if(actor.isTameable)ShowAction(actor.displayName+" 被打倒了，没能结契（生命降到 10% 以下时按 E 才能结契）"+back+"。");
+        else ShowAction(actor.displayName+" 被打倒了"+back+"。");
+    }
     public void ShowAction(string text){message=text;messageTimer=3.4f;}
     static string ManualText =
         "山海驭灵录 · 星金营地试玩说明\n\n"+
         "【世界介绍】你是山海旅者，持灵杖探索营地、青岚灵林和玄岩谷。野生异兽各有生命、习性和灵息；削弱后用灵契符收服，再放出并肩战斗。\n\n"+
         "【移动与视角】WASD 移动，空格跳跃，按住 Shift 加速（任意方向）；Left Alt+方向键闪避。移动鼠标控制准星；按住鼠标右键拖动旋转镜头，准星推到屏幕边缘时镜头也会缓慢跟转；滚轮缩放。蓄力时角色自动面向准星。\n\n"+
-        "【灵杖攻击】将准星对准守卫或异兽，按住鼠标左键或 J 蓄力，松开攻击；A 版射线固定从屏幕中心穿过，B 版射线从鼠标准星位置穿过；准星附近一小圈内的目标也能命中（镜头远近一致），角色与目标之间有树石阻挡时打不穿。头顶飘出的数字是造成的伤害。R 切换武器。星金杖上限 12，青玉杖上限 8，赤焰杖上限 10，赤霄杖上限 32。野生异兽受击会至少保留 1 点生命，避免误杀。\n\n"+
+        "【灵杖攻击】将准星对准守卫或异兽，按住鼠标左键或 J 蓄力，松开攻击；A 版射线固定从屏幕中心穿过，B 版射线从鼠标准星位置穿过；准星附近一小圈内的目标也能命中（镜头远近一致），角色与目标之间有树石阻挡时打不穿。头顶飘出的数字是造成的伤害。R 切换武器。星金杖上限 12，青玉杖上限 8，赤焰杖上限 10，赤霄杖上限 32。野生异兽和动物都能被打死：想结契就控制伤害，生命降到 10% 以下时靠近按 E；被打死的 30 分钟后在别处重新出现。\n\n"+
         "【结契流程】攻击野生异兽至生命 ≤10%；靠近灵木/青玉矿按住 F 读条约 1 秒采集；按 B 制作灵契符；靠近目标约 3.25 米内按 E 结契（消耗 1 张）。按 P 查看队伍并放出/收回异兽，1/2/3 使用宠物技能。\n\n"+
         "【资源说明】灵木用于灵木斧和灵契符；青玉矿用于青玉镐和灵契符。斧增加采木量，镐增加采矿量。资源点的标牌也会显示用途。采空后约 2 分钟重新生长。\n\n"+
         "【刷新圈】角色脚下的淡青色圆圈是 100 米刷新圈：在圈内活动时，会概率刷出野生灵兽，刷出的灵兽离开圈外一定距离后会消失。按 H 可隐藏圆圈。\n\n"+
@@ -83,7 +89,7 @@ public class M1GameManager : MonoBehaviour
         "【安全与退出】Esc 暂停、继续、重新开始、查看本说明、回到标题或退出。生命归零后会在当前世界的中央灵泉复活。\n\n"+
         "【声音】本试用版含原创程序合成的森林氛围、法杖动作音与各异兽音色。可在正式试听后再调整混音与叫声。";
 
-    public const string Version="v0.8.3";
+    public const string Version="v0.8.4";
     // 说明文字里的【小标题】自动染成金色加粗
     static readonly string ManualRich=ManualText.Replace("【","<color=#E0BA66><b>【").Replace("】","】</b></color>");
 

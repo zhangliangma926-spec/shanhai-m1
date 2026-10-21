@@ -64,7 +64,7 @@ public static class M1WindowsBuildV077Command
         foreach (var path in scenes)
         {
             EditorSceneManager.OpenScene(path);
-            var actors = UnityEngine.Object.FindObjectsByType<M1Actor>();
+            var actors = UnityEngine.Object.FindObjectsByType<M1Actor>().Where(x => !x.GetComponent<M1AmbientCritter>()).ToArray(); // v0.8.4：氛围动物也带 M1Actor，不计入
             int players = actors.Count(x => !x.isEnemy && !x.isTameable), enemies = actors.Count(x => x.isEnemy), pets = actors.Count(x => x.isTameable);
             if (players != 1 || enemies != 1 || pets != ExpectedPets) throw new Exception("场景检查未通过 " + path + " player=" + players + " enemy=" + enemies + " pets=" + pets + "（期望 pets=" + ExpectedPets + "）");
             if (!UnityEngine.Object.FindAnyObjectByType<M1GameManager>() || UnityEngine.Object.FindObjectsByType<M1Portal>().Length != 2) throw new Exception("场景缺少核心系统或传送门：" + path);

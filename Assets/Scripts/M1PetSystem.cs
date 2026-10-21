@@ -43,14 +43,14 @@ public class M1PetSystem : MonoBehaviour
     {
         M1Actor nearest=null;float distance=4.8f;
         foreach(var a in M1Actor.All)
-        {if(!a||!a.isTameable||a.tamed)continue;float d=Vector3.Distance(at,a.transform.position);if(d<distance){distance=d;nearest=a;}}
+        {if(!a||!a.isTameable||a.tamed||a.IsDead)continue;float d=Vector3.Distance(at,a.transform.position);if(d<distance){distance=d;nearest=a;}}
         if(!nearest){M1GameManager.Instance?.ShowAction("附近没有感应到灵纹的异兽。");return;}nearest.MarkForTaming(7f);
     }
     public void TryCapture(Vector3 playerPosition)
     {
         M1Actor nearest=null;float distance=3.25f;
         foreach(var a in M1Actor.All)
-        {if(!a||!a.isTameable||a.tamed)continue;float d=Vector3.Distance(playerPosition,a.transform.position);if(d<distance){distance=d;nearest=a;}}
+        {if(!a||!a.isTameable||a.tamed||a.IsDead)continue;float d=Vector3.Distance(playerPosition,a.transform.position);if(d<distance){distance=d;nearest=a;}}
         if(!nearest){M1GameManager.Instance?.ShowAction("靠近一只野生异兽后按 E。查看屏幕里的物种提示。");return;}
         string reason=TamingRequirement(nearest);if(!string.IsNullOrEmpty(reason)){M1GameManager.Instance?.ShowAction(reason);return;}if(!M1ResourceCrafting.ConsumeSeal()){M1GameManager.Instance?.ShowAction("结契需要灵契符：按 F 采集木材和矿石，再按 B 制作。");return;}
         if(!Collection.Contains(nearest))Collection.Add(nearest);

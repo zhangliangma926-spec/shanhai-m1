@@ -23,6 +23,7 @@ public static class M1AssetSetupV077
     public const string Beasts = "Assets/Art/Models/v080/Beasts/";
     // v0.8.3：阶段 C 用 Blender 做的模型与动作（主角走跑、灵蝶、三种灵鸟、苍鹰、灵龟、猫系三种、猪冲撞），来源见目录里的 ATTRIBUTION_清单.md
     public const string V083 = "Assets/Art/Models/v083/";
+    public const string V084 = "Assets/Art/Models/v084/"; // v0.8.4：Blender 重做动作的蹄类（骏马、斑马、玉角灵牛、绵羊）
     const string MatDir = "Assets/Art/Materials/v0.7.7/", CtrlDir = "Assets/Art/Animators/v0.7.7/";
 
     static readonly string[] LoopKeys = { "idle", "walk", "run", "gallop", "fly", "glide", "swim", "jump", "eating" };
@@ -31,7 +32,7 @@ public static class M1AssetSetupV077
     // ---------- 1. 导入设置 ----------
     public static void ConfigureImports()
     {
-        foreach (var dir in new[] { Characters, Creatures, Animals, Beasts, V083 })
+        foreach (var dir in new[] { Characters, Creatures, Animals, Beasts, V083, V084 })
             foreach (var path in FbxIn(dir)) ConfigureAnimatedModel(path);
         ConfigureAnimatedModel("Assets/Art/Models/External_Quaternius/BlueDemon.fbx"); // 旧版的幽蓝翼兽，同为 Quaternius 模型
         foreach (var dir in new[] { Nature, Kenney })
@@ -118,7 +119,8 @@ public static class M1AssetSetupV077
         if (texturedCache.TryGetValue(cacheKey, out var cached) && cached) return cached;
         string texName = TexAlias.TryGetValue(matName, out var alias) ? alias : matName == NatureOnlyAlias ? NatureOnlyTexture : matName;
         var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(Textures + texName + ".png");
-        if (!tex) { texturedCache[cacheKey] = null; return null; }
+        // v0.8.4：大小写必须一致。Windows 下查找不分大小写，Kenney 灵竹的材质叫 "grass"，之前套上了自然包的 Grass.png 草叶遮罩，整根竹子发白
+        if (!tex || tex.name != texName) { texturedCache[cacheKey] = null; return null; }
         Directory.CreateDirectory(MatDir);
         string path = MatDir + "Tex_" + matName + ".mat";
         var m = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -214,6 +216,14 @@ public static class M1AssetSetupV077
         AddOneShot(sm, move, hit, "Hit", .06f);
         AddOneShot(sm, move, roll, "Roll", .05f);
         if (!player) { AddOneShot(sm, move, FindExact(clips, "TakeOff"), "TakeOff", .06f); AddOneShot(sm, move, FindExact(clips, "Land"), "Land", .08f); }
+        // v0.8.4 死亡动作：播完停在最后一帧，不回到移动状态
+        var death = player ? null : clips.FirstOrDefault(c => Short(c.name).IndexOf("death", System.StringComparison.OrdinalIgnoreCase) >= 0);
+        if (death)
+        {
+            ctrl.AddParameter("Death", AnimatorControllerParameterType.Trigger);
+            var ds = sm.AddState("Death"); ds.motion = death;
+            var dt = sm.AddAnyStateTransition(ds); dt.hasExitTime = false; dt.duration = .1f; dt.canTransitionToSelf = false; dt.AddCondition(AnimatorConditionMode.If, 0, "Death");
+        }
         EditorUtility.SetDirty(ctrl); AssetDatabase.SaveAssets();
         ctrlCache[key] = ctrl; return ctrl;
     }
